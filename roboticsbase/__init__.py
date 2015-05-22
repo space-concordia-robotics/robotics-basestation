@@ -4,6 +4,8 @@ __version__ = '0.0.1'
 
 class HomeGui:
     import Tkinter
+    import PIL
+    
     outer = Tkinter.Tk()
 
     root = Tkinter.PanedWindow(outer, orient = "vertical")
