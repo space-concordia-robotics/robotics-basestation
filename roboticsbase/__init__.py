@@ -9,12 +9,12 @@ class HomeGui:
     root = Tkinter.PanedWindow(outer, orient = "vertical")
     root.pack()
 
-    photo = Tkinter.PhotoImage(file="RecordImage.gif")
+    photo = Tkinter.PhotoImage(file="images/RecordImage.gif")
     video = Tkinter.Label(outer, image = photo)
     video.pack()
     root.add(video)
 
-    photo2 = Tkinter.PhotoImage(file="map-and-compass.gif", height=200)
+    photo2 = Tkinter.PhotoImage(file="images/map-and-compass.gif", height=200)
     video2 = Tkinter.Label(outer, image = photo2)
     video2.pack()
     root.add(video2)
