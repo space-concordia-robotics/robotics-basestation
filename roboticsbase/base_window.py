@@ -1,7 +1,5 @@
 from common_constants import *
 
-import webkit  # test webkit
-
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
