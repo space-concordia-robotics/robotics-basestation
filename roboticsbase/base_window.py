@@ -24,7 +24,7 @@ class BaseWindow:
 
         # add status widgets here
         self.web = webkit.WebView()
-        self.web.open('www.google.ca')
+        self.web.open("www.google.ca")
         self.map = gtk.Frame('Maps')
         self.scroll = gtk.ScrolledWindow()
         self.scroll.add(self.web)
