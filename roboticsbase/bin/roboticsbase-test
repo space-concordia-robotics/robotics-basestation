@@ -3,6 +3,16 @@
 from roboticsbase.common_constants import *
 from roboticsbase.base_window import BaseWindow
 
+def on_right_click(data, event_button, event_time):
+    print "herp derp"
+
+def on_left_click(event):
+    print "DERPDERPDER"
+
+icon = gtk.status_icon_new_from_stock(gtk.STOCK_CDROM)
+icon.connect('popup-menu', on_right_click)
+icon.connect('activate', on_left_click)
+
 base = BaseWindow()
 base.main()
 
