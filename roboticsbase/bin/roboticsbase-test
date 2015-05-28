@@ -1,3 +1,9 @@
 #!/usr/bin/env python2.7
 
-print "potatoface"
+from roboticsbase.common_constants import *
+from roboticsbase.base_window import BaseWindow
+
+base = BaseWindow()
+base.main()
+
+

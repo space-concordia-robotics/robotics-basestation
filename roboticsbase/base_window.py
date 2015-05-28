@@ -1,6 +1,4 @@
-#!/usr/bin/env python2.7
-
-from common_headers import *
+from common_constants import *
 
 import webkit  # test webkit
 
@@ -97,8 +95,4 @@ class BaseWindow:
     def main(self):
         gtk.main()
 
-# Create base window and all its elements and run it.
-if __name__ == "__main__":
-    base = BaseWindow()
-    base.main()
 
