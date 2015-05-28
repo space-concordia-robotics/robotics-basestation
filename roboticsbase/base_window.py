@@ -26,8 +26,8 @@ class BaseWindow:
         ############################
         
         # Exit button
-        self.exit_button = gtk.Button("Exit")
-     #  exit_button.connect("clicked", self.delete_event)
+        self.exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
+        self.exit_button.connect("clicked", self.destroy)
         self.widget_box = gtk.HBox()
         self.widget_box.pack_start(self.exit_button)
 
