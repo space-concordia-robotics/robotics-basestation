@@ -2,6 +2,8 @@
 
 from common_headers import *
 
+import webkit  # test webkit
+
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
@@ -14,22 +16,47 @@ class BaseWindow:
         ############################
         # Video Box
         ############################
+
+        # add video widgets here
+
+
         self.video_box = gtk.HBox()
         
         ############################
         # Status Box
         ############################
+
+        # add status widgets here
+        self.web = webkit.WebView()
+        self.web.open('www.google.ca')
+        self.map = gtk.Frame('Maps')
+        self.scroll = gtk.ScrolledWindow()
+        self.scroll.add(self.web)
+        self.map.add(self.scroll)
+        
         self.status_box = gtk.HBox()
+        self.status_box.pack_start(self.map)
 
         ############################
-        # Bottom Widgets
+        # Control Widgets Box 
         ############################
         
         # Exit button
         self.exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
         self.exit_button.connect("clicked", self.destroy)
-        self.widget_box = gtk.HBox()
+
+        self.button1 = gtk.Button("This is button1")
+        self.button2 = gtk.Button("This is button2")
+
+        self.widget_box = gtk.HBox(False, 0)
+        self.widget_box.pack_start(self.button1)    # test button
+        self.widget_box.pack_start(self.button2)    # test button
         self.widget_box.pack_start(self.exit_button)
+
+
+        ###########################
+        # Main window stuff
+        ##########################
 
         # Put all box into the main one.
         self.main_box = gtk.VBox()
