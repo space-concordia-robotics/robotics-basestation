@@ -2,7 +2,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
-import webkit
+# import webkit
 
 WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 600

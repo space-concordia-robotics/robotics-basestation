@@ -23,15 +23,15 @@ class BaseWindow:
         ############################
 
         # add status widgets here
-        self.web = webkit.WebView()
-        self.web.open("www.google.ca")
-        self.map = gtk.Frame('Maps')
-        self.scroll = gtk.ScrolledWindow()
-        self.scroll.add(self.web)
-        self.map.add(self.scroll)
+        # self.web = webkit.WebView()
+        # self.web.open("www.google.ca")
+        # self.map = gtk.Frame('Maps')
+        # self.scroll = gtk.ScrolledWindow()
+        # self.scroll.add(self.web)
+        # self.map.add(self.scroll)
         
         self.status_box = gtk.HBox()
-        self.status_box.pack_start(self.map)
+        # self.status_box.pack_start(self.map)
 
         ############################
         # Control Widgets Box 
