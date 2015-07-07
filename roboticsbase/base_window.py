@@ -1,4 +1,8 @@
 from common_constants import *
+import threading
+from controller import listenjoystick
+
+
 
 class BaseWindow:
     # Create the base window where all other items will be.
@@ -91,6 +95,8 @@ class BaseWindow:
         gtk.main_quit()
    
     def main(self):
+        t = threading.Thread(target=listenjoystick, args=())
+        t.start()        
         gtk.main()
 
 
