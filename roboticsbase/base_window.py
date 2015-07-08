@@ -96,7 +96,7 @@ class BaseWindow:
    
     def main(self):
         t = threading.Thread(target=listenjoystick, args=())
-        t.start()        
+        t.start()
         gtk.main()
 
 
