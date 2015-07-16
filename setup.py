@@ -6,15 +6,16 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
-import pygame
 
 # requirements and links can be added and removed here. PyGTK does not support distutils on linux so it is not included for now.
 REQUIREMENTS = [
     'roboticsnet',
+    'pygame>=1.9',
 ]
 
 DEPENDENCY_LINKS = [
-    'https://github.com/space-concordia-robotics/robotics-networking/tarball/master',
+    'https://github.com/space-concordia-robotics/robotics-networking/tarball/master#egg=roboticsnet',
+    'https://github.com/xamox/pygame/tarball/master#egg=pygame-1.9.1'
 ]
 
 setup(
