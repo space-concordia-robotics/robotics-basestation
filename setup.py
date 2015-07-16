@@ -16,15 +16,18 @@ setup(
 
     description='',
     long_description=open('README.rst').read(),
-    # url='http://www.github.com/psyomn/pypsylbm',
+    url='https://github.com/space-concordia-robotics/robotics-basestation',
     license='MIT',
 
     author='TBD',
 
- #   install_requires=REQUIREMENTS,
+    #dependencies
+    install_requires=['roboticsnet'],
+    dependency_links=['https://github.com/space-concordia-robotics/robotics-networking/tarball/master'],
 
     packages=['roboticsbase'],
     zip_safe=False,
     scripts=['roboticsbase/bin/roboticsbase-test']
+    
 )
 
