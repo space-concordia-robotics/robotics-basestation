@@ -1,0 +1,24 @@
+Tested on a Logitech F310
+
+Joystick axes:
+
+Axis 0: Left stick, left (-1) to right (1)
+Axis 1: Left stick, top (-1) to bottom (1)
+Axis 2: Left trigger, uncompressed (-1) to compressed (1)
+Axis 3: Right stick, left (-1) to right (1)
+Axis 4: Right stick, top (-1) to bottom (1)
+Axis 5: Right trigger, uncompressed (-1) to compressed (1)
+
+Note: triggers do not produce values until initially compressed. Sticks center slightly off a 0 value on the axis
+
+Button values:
+
+A: 0
+B: 1
+X: 2
+Y: 3
+Left bumper: 4
+Right bumper: 5
+Select: 6
+Start: 7
+
