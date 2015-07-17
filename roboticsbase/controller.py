@@ -1,90 +1,92 @@
 #!/usr/bin/env python3
 
 import pygame
-import os
 import time
 import threading
+from roboticsnet.client import rover_client
 
-def listenjoystick():
-    pygame.init()
+JOYSTICK_ID = 0
+
+def initGamepad():    
+    if (pygame.joystick.get_count() > 0):
+        joystick = pygame.joystick.Joystick(JOYSTICK_ID)
+        joystick.init()
+        print "Joystick active on slot %d" % JOYSTICK_ID
+        return joystick
+    else:
+        print "Error - no joystick detected."
+        return 0
+
+def getJoystickValue(joystick):
+    # temp mapping values - waiting on finalized hook values
+    x = joystick.get_axis(3)*128
+    y = (-joystick.get_axis(4))*128
+    
+    return (x,y)
+
+def joystickListener(joystick):
+    exit = False
+    client = rover_client.RoverClient() #host, port temporarily set to default values as per roboticsnet constants. Pass these in from the base station interface?
+    print "New client established using host %s and port %d" % (client.getHost(), client.getPort())
+     
+    while exit == False:
+        # Button logic
+        for event in pygame.event.get():
+            if event.type == pygame.JOYBUTTONDOWN:
+                if event.joy == JOYSTICK_ID and event.button == 0:
+                    exit = True
+                #elif...
         
-    #Loop until the user clicks the currently nonexistent close button.
-    done = False
-
-    # Initialize the joysticks
-    pygame.joystick.init()
-    
-    # FIXME: this is a naive implementation for now
-    joystick = pygame.joystick.Joystick(0)
-    joystick.init()
-
-    # -------- Main Program Loop -----------
-    while done==False:
-        # EVENT PROCESSING STEP
-        for event in pygame.event.get(): # User did something
-            if event.type == pygame.QUIT: # If user clicked close
-                done=True # Flag that we are done so we exit this loop
-        # Get count of joysticks
-        #joystick_count = pygame.joystick.get_count()
-        # For each joystick:
-        #joystick = pygame.joystick.Joystick(0)
-        #joystick.init()
-        # Get the name from the OS for the controller/joystick
-        #name = joystick.get_name()
-    
-        #axes = joystick.get_numaxes()
-        #for exit button
-    
-    
-        buttons = joystick.get_numbuttons()
-        if joystick.get_button(0)>0:
-            exit()
-        y=(-joystick.get_axis(3))*63
-        x=(joystick.get_axis(2)+1)*128
-        if x<80:
-            print "turn left"
-            leftMotorValue = 96
-            rightMotorValue = 224
-            sendCommand("forward",leftMotorValue)
-            sendCommand("reverse",rightMotorValue)
+        # Joystick logic
+        (x,y) = getJoystickValue(joystick)
+        
+        print "X: %d\nY: %d" % (x,y)
+        
+        if x < -30:
+            print "left %d" % x
+            #leftMotorValue = 96
+            #rightMotorValue = 224
+            #client.turnLeft(x)
             
-        elif x>170:
-            print "turn right"
-            leftMotorValue = 32
-            rightMotorValue = 160
-            sendCommand("reverse",leftMotorValue)
-            sendCommand("forward",rightMotorValue) 
+        elif x > 30:
+            print "right %d" % x
+            #leftMotorValue = 32
+            #rightMotorValue = 160
+            #client.turnRight(x)
             
-        elif y > 0:
-            y1 = int(193-y)
-            y2 = int(65-y)
-            print "forward",y1,y2
-            sendCommand("forward",y1)
-            sendCommand("forward",y2)
-
-        elif y < 0:
-            y1 = int(193 + y)
-            y2 = int(65 + y)
-            print "reverse",y1,y2
-            sendCommand("reverse",y1)
-            sendCommand("reverse",y2)
-            
+        elif y > 10:
+            #y1 = int(193-y)
+            #y2 = int(65-y)
+            print "forward %d" % y
+            #client.forward(y)
+    
+        elif y < -10:
+            #y1 = int(193 + y)
+            #y2 = int(65 + y)
+            print "reverse %d" % y
+            #client.forward(y)
+                
         else:
             print "stop"
-            genericCommand("stop")
+            #client.stop(0)
         
-        #print x,y
         time.sleep(0.125)
+        
+    pygame.quit()
     
-    pygame.quit ()
+def spawnJoystickThread():
+    pygame.init()
+    joystick = initGamepad()
+    if (joystick == 0):
+        print "Cannot start listener thread without joystick - connect a controller and try again."
+        pygame.quit()
+    else:
+        print "Starting joystick listener thread..."
+        t = threading.Thread(target=joystickListener(joystick), args=())
+        t.start()
 
-# Sends 
-def sendCommand(direction, speed):
-    os.system("~/Dev/git/robotics-networking/roboticsnet/bin/roboticsnet-client --" + direction + " " + str(speed))
+def main():
+    spawnJoystickThread()
     
-def genericCommand(arg):
-    os.system("~/Dev/git/robotics-networking/roboticsnet/bin/roboticsnet-client --" + arg)
-
-t = threading.Thread(target=listenjoystick, args=())
-t.start()
+main()
 
