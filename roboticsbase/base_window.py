@@ -1,6 +1,6 @@
 from common_constants import *
 import threading
-from controller import listenjoystick
+from controller import spawn_joystick_thread
 
 
 
@@ -95,8 +95,8 @@ class BaseWindow:
         gtk.main_quit()
    
     def main(self):
-        t = threading.Thread(target=listenjoystick, args=())
-        t.start()
+        # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
+        spawn_joystick_thread()
         gtk.main()
 
 
