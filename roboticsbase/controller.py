@@ -7,7 +7,7 @@ from roboticsnet.client import rover_client
 
 JOYSTICK_ID = 0
 
-def initGamepad():    
+def init_gamepad():    
     if (pygame.joystick.get_count() > 0):
         joystick = pygame.joystick.Joystick(JOYSTICK_ID)
         joystick.init()
@@ -17,14 +17,14 @@ def initGamepad():
         print "Error - no joystick detected."
         return 0
 
-def getJoystickValue(joystick):
+def get_joystick_value(joystick):
     # temp mapping values - waiting on finalized hook values
     x = joystick.get_axis(3)*128
     y = (-joystick.get_axis(4))*128
     
     return (x,y)
 
-def joystickListener(joystick):
+def joystick_listener(joystick):
     exit = False
     client = rover_client.RoverClient() #host, port temporarily set to default values as per roboticsnet constants. Pass these in from the base station interface?
     print "New client established using host %s and port %d" % (client.getHost(), client.getPort())
@@ -38,7 +38,7 @@ def joystickListener(joystick):
                 #elif...
         
         # Joystick logic
-        (x,y) = getJoystickValue(joystick)
+        (x,y) = get_joystick_value(joystick)
         
         print "X: %d\nY: %d" % (x,y)
         
@@ -74,19 +74,19 @@ def joystickListener(joystick):
         
     pygame.quit()
     
-def spawnJoystickThread():
+def spawn_joystick_thread():
     pygame.init()
-    joystick = initGamepad()
+    joystick = init_gamepad()
     if (joystick == 0):
         print "Cannot start listener thread without joystick - connect a controller and try again."
         pygame.quit()
     else:
         print "Starting joystick listener thread..."
-        t = threading.Thread(target=joystickListener(joystick), args=())
+        t = threading.Thread(target=joystick_listener(joystick), args=())
         t.start()
 
 def main():
-    spawnJoystickThread()
+    spawn_joystick_thread()
     
 main()
 
