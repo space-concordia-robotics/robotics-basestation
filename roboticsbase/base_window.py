@@ -1,7 +1,7 @@
 from common_constants import *
 import threading
 from controller import spawn_joystick_thread
-
+from roboticsnet.gateway_constants import ROBOTICSNET_PORT
 
 
 class BaseWindow:
@@ -96,7 +96,9 @@ class BaseWindow:
    
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
-        spawn_joystick_thread()
+        # furthermore, events in e can be used in the window to trigger events
+        e = [threading.Event() for i in range(NUM_BUTTON_EVENTS)]
+        spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
         gtk.main()
 
 
