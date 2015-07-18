@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 import pygame
 import time
 import threading
-from controller import initGamepad
+from controller import init_gamepad
 
-def eventTester(joystick):
+def event_tester(joystick):
     exit = False
     
     while exit == False:
@@ -16,16 +14,16 @@ def eventTester(joystick):
                     exit = True
         for x in range(joystick.get_numaxes()):
             if (joystick.get_axis(x) != 0):
-                print "Axis {0}: {1}".format(x, joystick.get_axis(x))
+                print "Axis %d: %d" % (x, joystick.get_axis(x))
         time.sleep(0.25)
         
     pygame.quit()
     
 def main():
     pygame.init()
-    joystick = initGamepad()
+    joystick = init_gamepad()
     print "Starting controller test"
-    t = threading.Thread(target=eventTester(joystick), args=())
+    t = threading.Thread(target=event_tester, args=(joystick))
     t.start()
     
 main()
