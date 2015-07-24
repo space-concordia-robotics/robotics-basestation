@@ -20,8 +20,8 @@ def init_gamepad():
 
 def get_joystick_value(joystick):
     # temp mapping values - waiting on finalized hook values
-    x = int(joystick.get_axis(AXIS_RSTICK_X)*128+128)
-    y = int((-joystick.get_axis(AXIS_RSTICK_Y))*128+128)
+    x = int(joystick.get_axis(AXIS_RSTICK_X)*127+128)
+    y = int((-joystick.get_axis(AXIS_RSTICK_Y))*127+128)
     
     return (x,y)
 
@@ -53,11 +53,11 @@ def joystick_listener(joystick, host, port, events):
             
         elif y > (128+10):
             print "forward %d" % y
-            send_command(ROBOTICSNET_COMMAND_FORWARD, x, host, port)
+            send_command(ROBOTICSNET_COMMAND_FORWARD, y, host, port)
     
         elif y < (128-10):
             print "reverse %d" % y
-            send_command(ROBOTICSNET_COMMAND_REVERSE, x, host, port)
+            send_command(ROBOTICSNET_COMMAND_REVERSE, y, host, port)
                 
         else:
             print "stop"
