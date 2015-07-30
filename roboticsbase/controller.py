@@ -8,6 +8,7 @@ from profiles.logitech_F310 import *
 
 from station_client import send_command
 
+
 def init_gamepad():    
     if (pygame.joystick.get_count() > 0):
         joystick = pygame.joystick.Joystick(JOYSTICK_ID)
@@ -25,7 +26,9 @@ def get_joystick_value(joystick):
     
     return (x,y)
 
-def joystick_listener(joystick, host, port, events):    
+def joystick_listener(joystick, host, port, events):
+    lastx=30    
+    lasty=30
     while events[STOP_CONTROLLER_EVENT].is_set() == False:
         # Button logic
         for event in pygame.event.get():
@@ -42,6 +45,12 @@ def joystick_listener(joystick, host, port, events):
         (x,y) = get_joystick_value(joystick)
         
         print "X: %d\nY: %d" % (x,y)
+        
+        if y==lasty and x=lastx:
+            continue
+        else:
+            lasty=y
+            lastx=x
         
         if x < (-10):
             print "left %d" % x
