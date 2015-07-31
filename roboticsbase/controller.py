@@ -46,17 +46,17 @@ def joystick_listener(joystick, host, port, events):
         
         print "X: %d\nY: %d" % (x,y)
         
-        if y==lasty and x=lastx:
+        if y==lasty and x==lastx:
             continue
         else:
             lasty=y
             lastx=x
         
-        if x < (-10):
+        if x < (-20):
             print "left %d" % x
             send_command(ROBOTICSNET_COMMAND_TURNLEFT, host, port, -x/2)
             
-        elif x > (10):
+        elif x > (20):
             print "right %d" % x
             send_command(ROBOTICSNET_COMMAND_TURNRIGHT, host, port, x/2)
             
@@ -75,7 +75,7 @@ def joystick_listener(joystick, host, port, events):
         time.sleep(0.25)
     
     # send one final stop command
-    send_command(ROBOTICSNET_COMMAND_STOP, 0, host, port)
+    send_command(ROBOTICSNET_COMMAND_STOP, host, port, 0)
     pygame.quit()
     
 def spawn_joystick_thread(host, port, events):
@@ -90,8 +90,10 @@ def spawn_joystick_thread(host, port, events):
         t.start()
 
 def main():
+    host = raw_input("Enter host: ")
+    port = int(raw_input("Enter port: "))
     e = [threading.Event() for i in range(NUM_BUTTON_EVENTS)]
-    spawn_joystick_thread('localhost', 5000, e)
+    spawn_joystick_thread(host, port, e)
     
 main()
 
