@@ -1,10 +1,14 @@
-from roboticsnet.client.rover_client import RoverClient
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
 
-def send_command(command, host='localhost', port=ROBOTICSNET_PORT, value=0):
-    client = RoverClient(host, port)
-    print "Using %s:%d:" % (client.getHost(), client.getPort())
+def send_locked_command(client, lock, command, value=0):
+    """
+    Process-safe function to send a command via a passed client.
+    By sharing a lock between all processes, we ensure that only one command may be sent at a time (see python multiprocessing documentation)
+    """
+    
+    lock.acquire()
+    print "Sending %d to %s:%d:" % (command, client.getHost(), client.getPort())
     
     try:
         if (command == ROBOTICSNET_COMMAND_GRACEFUL):
@@ -29,9 +33,12 @@ def send_command(command, host='localhost', port=ROBOTICSNET_PORT, value=0):
         print "Sent %d:%d." % (command, value)
 
     except RoboticsnetException as e:
-        print "Station client failed!"
+        print "Command failed!"
         print e.message
 
     except Exception as e:
         print "Critical station client failure!"
         print e.message
+        
+    finally:
+        lock.release()
