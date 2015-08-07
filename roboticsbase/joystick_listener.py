@@ -64,19 +64,19 @@ def input_listener(host, port, events, lock, joystick):
 
         if x < (-20) and y >= 0:
             print "forward left %d" % x
-            send_command(ROBOTICSNET_COMMAND_FORWARDLEFT, host, port, -x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDLEFT, -x/2)
 
         elif x > (20) and y >= 0:
             print "forward right %d" % x
-            send_command(ROBOTICSNET_COMMAND_FORWARDRIGHT, host, port, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
 
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
-            send_command(ROBOTICSNET_COMMAND_REVERSELEFT, host, port, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, x/2)
 
         elif x > 20 and y < 0:
             print "reversing right %d" % x
-            send_command(ROBOTICSNET_COMMAND_REVERSERIGHT, host, port, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
 
         elif y > (10):
             print "forward %d" % y
