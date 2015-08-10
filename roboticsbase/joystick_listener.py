@@ -61,15 +61,23 @@ def joystick_listener(host, port, events, lock, joystick):
         (x,y) = get_joystick_value(joystick)
         
         print "X: %d\nY: %d" % (x,y)
-        
-        if x < (-20):
-            print "left %d" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_TURNLEFT, -x/2)
-            
-        elif x > (20):
-            print "right %d" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_TURNRIGHT, x/2)
-            
+
+        if x < (-20) and y >= 0:
+            print "forward left %d" % x
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDLEFT, -x/2)
+
+        elif x > (20) and y >= 0:
+            print "forward right %d" % x
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
+
+        elif x < (-20) and y < 0:
+            print "reversing left %x" % x
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, x/2)
+
+        elif x > 20 and y < 0:
+            print "reversing right %d" % x
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
+
         elif y > (10):
             print "forward %d" % y
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARD, y)

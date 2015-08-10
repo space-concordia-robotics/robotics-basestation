@@ -17,10 +17,14 @@ def send_locked_command(client, lock, command, value=0):
             client.forward(value)
         elif (command == ROBOTICSNET_COMMAND_REVERSE):
             client.reverse(value)
-        elif (command == ROBOTICSNET_COMMAND_TURNLEFT):
-            client.turnLeft(value)
-        elif (command == ROBOTICSNET_COMMAND_TURNRIGHT):
-            client.turnRight(value)
+        elif (command == ROBOTICSNET_COMMAND_FORWARDLEFT):
+            client.forwardLeft(value)
+        elif (command == ROBOTICSNET_COMMAND_FORWARDRIGHT):
+            client.forwardRight(value)
+        elif (command == ROBOTICSNET_COMMAND_REVERSELEFT):
+            client.reverseLeft(value)
+        elif (command == ROBOTICSNET_COMMAND_REVERSERIGHT):
+            client.reverseRight(value)
         elif (command == ROBOTICSNET_COMMAND_STOP):
             client.stop()
         elif (command == ROBOTICSNET_COMMAND_QUERYPROC):

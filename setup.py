@@ -9,8 +9,8 @@ import gtk
 
 # requirements and links can be added and removed here. PyGTK does not support distutils on linux so it is not included for now.
 REQUIREMENTS = [
-    'roboticsnet',
-    'pygame>=1.9'
+    'roboticsnet'#,
+    #'pygame>=1.9'
 ]
 
 DEPENDENCY_LINKS = [
