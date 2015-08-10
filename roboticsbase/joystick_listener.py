@@ -41,8 +41,12 @@ def joystick_listener(host, port, events, lock, joystick):
     """
     client = RoverClient(host, port)
     print "Controller client established with %s:%d:" % (client.getHost(), client.getPort())
-    
+
+    last = (0, 0)    
     while events[ROBOTICSBASE_STOP_LISTENER].is_set() == False:
+        # Sleep before starting next cycle
+        time.sleep(CONTROLLER_SLEEP_INTERVAL)
+
         # Button logic
         for event in pygame.event.get():
             if event.type == JOYBUTTONDOWN:
@@ -59,8 +63,10 @@ def joystick_listener(host, port, events, lock, joystick):
 
         # Joystick logic
         (x,y) = get_joystick_value(joystick)
-        
         print "X: %d\nY: %d" % (x,y)
+
+        if (x,y) == last:
+            continue
 
         if x < (-20) and y >= 0:
             print "forward left %d" % x
@@ -90,7 +96,8 @@ def joystick_listener(host, port, events, lock, joystick):
             print "stop"
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
         
-        time.sleep(CONTROLLER_SLEEP_INTERVAL)
+        # Save joystick value
+        last = (x,y)
     
     # send one final stop command. Reset controller stop event
     send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
