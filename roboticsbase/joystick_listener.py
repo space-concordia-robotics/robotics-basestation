@@ -35,7 +35,7 @@ def get_joystick_value(joystick):
     
     return (x,y)
 
-def input_listener(host, port, events, lock, joystick):
+def joystick_listener(host, port, events, lock, joystick):
     """
     Main movement control thread - interprets commands from joystick and sends them to rover.
     """
@@ -88,9 +88,9 @@ def input_listener(host, port, events, lock, joystick):
     send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
     events[ROBOTICSBASE_STOP_LISTENER].clear()
 
-def spawn_input_process(host, port, events, lock):
+def spawn_joystick_process(host, port, events, lock):
     """
-    Spawns an input process, which gets input from keyboard or controller and sends it to the rover.
+    Spawns a joystick input process, which gets input from controller and sends it to the rover.
     events is an array of process events that keep track of basestation events (Such as the stream video command and whether the controller is active)
     lock is a process lock which prevents clients from sending messages concurrently
     """
@@ -101,11 +101,11 @@ def spawn_input_process(host, port, events, lock):
         joystick = get_joystick()
         joystick.init()
         
-        input_process = multiprocessing.Process(target=input_listener, args=(host, port, events, lock, joystick))
-        input_process.start()
+        joystick_process = multiprocessing.Process(target=joystick_listener, args=(host, port, events, lock, joystick))
+        joystick_process.start()
         
         # Wait for process to finish, then deinit pygame
-        input_process.join()
+        joystick_process.join()
         
     except InputException as e:
         print "Input error!"
@@ -122,7 +122,7 @@ def main():
     port = int(raw_input("Enter port: "))
     events = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
     lock = multiprocessing.Lock()
-    spawn_input_process(host, port, events, lock)
+    spawn_joystick_process(host, port, events, lock)
     
 main()
 
