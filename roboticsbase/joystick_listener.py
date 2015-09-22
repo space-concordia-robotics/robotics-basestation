@@ -78,7 +78,7 @@ def joystick_listener(host, port, events, lock, joystick):
 
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, -x/2)
 
         elif x > 20 and y < 0:
             print "reversing right %d" % x
