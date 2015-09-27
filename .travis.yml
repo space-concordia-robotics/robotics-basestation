@@ -11,6 +11,7 @@ addons:
       - python-cairo-dev
       - python-gobject
       - python-gobject-dev
+      - python-pygame
 before_install:
   - export WORKDIR=$HOME/build/
   - export PYGTK_VERSION=2.24.0
