@@ -7,15 +7,26 @@ addons:
       - libgtk2.0-dev
       - libglib2.0-dev
 before_install:
+  - # Where to build things
+  - export WORKDIR=$HOME/build/
+  - export PYGOB_VERSION=3.10.1
+  - export PYGOB_PATH=$WORKDIR/pygob/$PYGOB_VERSION
+  - mkdir -p $PYGOB_PATH
+  - cd $PYGOB_PATH
+  - wget http://ftp.gnome.org/pub/GNOME/sources/pygobject/3.10/pygobject-"$PYGOB_VERSION".tar.xz -O pygob.tar.xz
+  - tar -xf pygob.tar.xz
+  - cd pygobject-"$PYGOB_VERSION"/
+  - ./configure
+  - make
+  - sudo make install
   - export PYGTK_VERSION=2.24.0
-  - export PYGTK_PATH=$HOME/pygtk/
-  - export PYGTK_INST=$HOME/pygtk-inst/
-  - mkdir $PYGTK_PATH
+  - export PYGTK_PATH=$WORKDIR/pygtk/$PYGTK_VERSION
+  - mkdir -p $PYGTK_PATH
   - cd $PYGTK_PATH
   - wget http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-"$PYGTK_VERSION".tar.bz2 -O pygtk.tar.bz2
   - tar -xf pygtk.tar.bz2
-  - cd pygtk-"$PYGTK_VERSION"
-  - ./configure --prefix=$PYGTK_INST
+  - cd pygtk-"$PYGTK_VERSION"/
+  - ./configure
   - make
   - sudo make install
 install:
