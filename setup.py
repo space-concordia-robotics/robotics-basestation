@@ -9,12 +9,11 @@ import gtk
 
 # requirements and links can be added and removed here. PyGTK does not support distutils on linux so it is not included for now.
 REQUIREMENTS = [
-    'roboticsnet',
     'pygame>=1.9'
 ]
 
 DEPENDENCY_LINKS = [
-    'https://github.com/space-concordia-robotics/robotics-networking/tarball/master#egg=roboticsnet',
+    'https://github.com/space-concordia-robotics/robotics-networking/tarball/master#egg=roboticsnet-0.1.0',
     'https://github.com/xamox/pygame/tarball/master#egg=pygame-1.9.1'
 ]
 
@@ -26,7 +25,7 @@ setup(
     long_description=open('README.rst').read(),
     url='https://github.com/space-concordia-robotics/robotics-basestation',
     license='MIT',
-    
+
     author='TBD',
 
     install_requires=REQUIREMENTS,
@@ -34,7 +33,8 @@ setup(
 
     packages=['roboticsbase'],
     zip_safe=False,
-    scripts=['roboticsbase/bin/roboticsbase-test']
-    
+    scripts=['roboticsbase/bin/roboticsbase-test'],
+    test_suite="test"
+
 )
 
