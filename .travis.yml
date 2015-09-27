@@ -1,5 +1,8 @@
 language: python
 python:
   - "2.7"
-install: "python setup.py install"
+before_install:
+  - sudo apt-get install python-gtk2 python-gtk2-dev
+install:
+  - python setup.py install
 script: "python setup.py test"
