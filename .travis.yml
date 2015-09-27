@@ -3,7 +3,7 @@ python:
   - "2.7"
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install libgtk2.0-dev libglib2.0-dev libgirepository1.0-dev python-pygame libcairo2-dev libatk1.0-devA libsdl2-dev libsmpeg-dev
+  - sudo apt-get install libgtk2.0-dev libglib2.0-dev libgirepository1.0-dev python-pygame libcairo2-dev libatk1.0-dev libsdl2-dev libsmpeg-dev
 install:
 # Environment setup
   - export VIRT_ROOT=/home/travis/virtualenv/python$TRAVIS_PYTHON_VERSION
