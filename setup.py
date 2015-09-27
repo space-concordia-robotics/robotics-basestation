@@ -9,7 +9,6 @@ REQUIREMENTS = [
 
 DEPENDENCY_LINKS = [
     'https://github.com/space-concordia-robotics/robotics-networking/tarball/master#egg=roboticsnet-0.1.0',
-    'https://github.com/xamox/pygame/tarball/master#egg=pygame-1.9.1'
 ]
 
 setup(
