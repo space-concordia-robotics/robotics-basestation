@@ -7,6 +7,8 @@ addons:
       - libgtk2.0-dev
       - libglib2.0-dev
       - libgirepository1.0-dev
+      - python-cairo
+      - python-cairo-dev
 before_install:
   - # Where to build things
   - export WORKDIR=$HOME/build/
