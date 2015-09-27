@@ -101,7 +101,6 @@ def joystick_listener(host, port, events, lock, joystick):
     
     # send one final stop command. Reset controller stop event
     send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
-    events[ROBOTICSBASE_STOP_LISTENER].clear()
 
 def spawn_joystick_process(host, port, events, lock):
     """
@@ -111,6 +110,7 @@ def spawn_joystick_process(host, port, events, lock):
     """
     
     pygame.init()
+    events[ROBOTICSBASE_STOP_LISTENER].clear()
     
     try:
         joystick = get_joystick()
