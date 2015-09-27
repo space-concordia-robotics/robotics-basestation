@@ -9,19 +9,21 @@ addons:
       - libgirepository1.0-dev
       - python-cairo
       - python-cairo-dev
+      - python-gobject
+      - python-gobject-dev
 before_install:
   - # Where to build things
-  - export WORKDIR=$HOME/build/
-  - export PYGOB_VERSION=2.90.4
-  - export PYGOB_PATH=$WORKDIR/pygob/$PYGOB_VERSION
-  - mkdir -p $PYGOB_PATH
-  - cd $PYGOB_PATH
-  - wget http://ftp.gnome.org/pub/GNOME/sources/pygobject/2.90/pygobject-"$PYGOB_VERSION".tar.xz -O pygob.tar.xz
-  - tar -xf pygob.tar.xz
-  - cd pygobject-"$PYGOB_VERSION"/
-  - ./configure
-  - make
-  - sudo make install
+  - # export WORKDIR=$HOME/build/
+  - # export PYGOB_VERSION=2.90.4
+  - # export PYGOB_PATH=$WORKDIR/pygob/$PYGOB_VERSION
+  - # mkdir -p $PYGOB_PATH
+  - # cd $PYGOB_PATH
+  - # wget http://ftp.gnome.org/pub/GNOME/sources/pygobject/2.90/pygobject-"$PYGOB_VERSION".tar.xz -O pygob.tar.xz
+  - # tar -xf pygob.tar.xz
+  - # cd pygobject-"$PYGOB_VERSION"/
+  - # ./configure
+  - # make
+  - # sudo make install
   - export PYGTK_VERSION=2.24.0
   - export PYGTK_PATH=$WORKDIR/pygtk/$PYGTK_VERSION
   - mkdir -p $PYGTK_PATH
