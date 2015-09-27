@@ -1,6 +1,10 @@
 ROBOTICS BASESTATION
 ========
 
+.. image:: https://travis-ci.org/space-concordia-robotics/robotics-basestation.svg
+  :target: https://travis-ci.org/space-concordia-robotics/robotics-basestation
+
+
 Robotics networking stuff.
 
 To install, run:
