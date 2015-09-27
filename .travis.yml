@@ -1,18 +1,10 @@
 language: python
 python:
   - "2.7"
-addons:
-  apt:
-    packages:
-      - libgtk2.0-dev
-      - libglib2.0-dev
-      - libgirepository1.0-dev
-      - python-cairo
-      - python-cairo-dev
-      - python-gobject
-      - python-gobject-dev
-      - python-pygame
 before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install libgtk2.0-dev libglib2.0-dev libgirepository1.0-dev python-cairo python-cairo-dev python-gobject2 python-gobject2-dev python-pygame
+install:
   - export WORKDIR=$HOME/build/
   - export PYGTK_VERSION=2.24.0
   - export PYGTK_PATH=$WORKDIR/pygtk/$PYGTK_VERSION
@@ -23,5 +15,5 @@ before_install:
   - cd pygtk-"$PYGTK_VERSION"/
   - ./configure --prefix=/home/travis/virtualenv/python$TRAVIS_PYTHON_VERSION
   - make
-  - sudo make install
+  - make install
 script: "python setup.py test"
