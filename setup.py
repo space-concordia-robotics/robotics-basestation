@@ -20,6 +20,7 @@ setup(
     license='MIT',
 
     author='TBD',
+    author_email='TBD@TBD.TBD',
 
     install_requires=REQUIREMENTS,
     dependency_links=DEPENDENCY_LINKS,

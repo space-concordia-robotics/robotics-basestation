@@ -5,7 +5,6 @@ before_install:
   - sudo apt-add-repository --yes ppa:zoogie/sdl2-snapshots
   - sudo apt-get update -qq
   - sudo apt-get install libgtk2.0-dev libglib2.0-dev libgirepository1.0-dev python-pygame libcairo2-dev libatk1.0-dev libsdl2-dev libsmpeg-dev ibsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev libsmpeg-dev libsdl1.2-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev
-install:
 # Environment setup
   - export VIRT_ROOT=/home/travis/virtualenv/python$TRAVIS_PYTHON_VERSION
   - export PKG_CONFIG_PATH=$VIRT_ROOT/lib/pkgconfig
@@ -33,4 +32,6 @@ install:
   - make > /dev/null
   - make install > /dev/null
   - cd ..
-script: "python setup.py test"
+install:
+  - python setup.py install
+script: python setup.py test
