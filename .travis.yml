@@ -13,7 +13,7 @@ addons:
       - python-gobject-dev
 before_install:
   - # Where to build things
-  - # export WORKDIR=$HOME/build/
+  - export WORKDIR=$HOME/build/
   - # export PYGOB_VERSION=2.90.4
   - # export PYGOB_PATH=$WORKDIR/pygob/$PYGOB_VERSION
   - # mkdir -p $PYGOB_PATH
