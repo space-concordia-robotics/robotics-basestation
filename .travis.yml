@@ -13,7 +13,7 @@ before_install:
   - export PYGOB_PATH=$WORKDIR/pygob/$PYGOB_VERSION
   - mkdir -p $PYGOB_PATH
   - cd $PYGOB_PATH
-  - wget http://ftp.gnome.org/pub/GNOME/sources/pygobject/3.10/pygobject-"$PYGOB_VERSION".tar.xz -O pygob.tar.xz
+  - wget http://ftp.gnome.org/pub/GNOME/sources/pygobject/2.90/pygobject-"$PYGOB_VERSION".tar.xz -O pygob.tar.xz
   - tar -xf pygob.tar.xz
   - cd pygobject-"$PYGOB_VERSION"/
   - ./configure
