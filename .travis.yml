@@ -12,7 +12,7 @@ addons:
       - python-gobject
       - python-gobject-dev
       - python-pygame
-before_install:
+install:
   - export WORKDIR=$HOME/build/
   - export PYGTK_VERSION=2.24.0
   - export PYGTK_PATH=$WORKDIR/pygtk/$PYGTK_VERSION
@@ -21,9 +21,8 @@ before_install:
   - wget http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-"$PYGTK_VERSION".tar.bz2 -O pygtk.tar.bz2
   - tar -xf pygtk.tar.bz2
   - cd pygtk-"$PYGTK_VERSION"/
-  - ./configure
+  - ./configure --prefix=/home/travis/virtualenv/python$TRAVIS_PYTHON_VERSION
   - make
   - sudo make install
-install:
   - python setup.py install
 script: "python setup.py test"
