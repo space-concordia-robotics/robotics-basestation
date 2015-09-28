@@ -35,14 +35,18 @@ def get_joystick_value(joystick):
     
     return (x,y)
 
-def input_listener(host, port, events, lock, joystick):
+def joystick_listener(host, port, events, lock, joystick):
     """
     Main movement control thread - interprets commands from joystick and sends them to rover.
     """
     client = RoverClient(host, port)
     print "Controller client established with %s:%d:" % (client.getHost(), client.getPort())
-    
+
+    last = (0, 0)    
     while events[ROBOTICSBASE_STOP_LISTENER].is_set() == False:
+        # Sleep before starting next cycle
+        time.sleep(CONTROLLER_SLEEP_INTERVAL)
+
         # Button logic
         for event in pygame.event.get():
             if event.type == JOYBUTTONDOWN:
@@ -59,24 +63,26 @@ def input_listener(host, port, events, lock, joystick):
 
         # Joystick logic
         (x,y) = get_joystick_value(joystick)
-        
         print "X: %d\nY: %d" % (x,y)
+
+        if (x,y) == last:
+            continue
 
         if x < (-20) and y >= 0:
             print "forward left %d" % x
-            send_command(ROBOTICSNET_COMMAND_FORWARDLEFT, host, port, -x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDLEFT, -x/2)
 
         elif x > (20) and y >= 0:
             print "forward right %d" % x
-            send_command(ROBOTICSNET_COMMAND_FORWARDRIGHT, host, port, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
 
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
-            send_command(ROBOTICSNET_COMMAND_REVERSELEFT, host, port, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, -x/2)
 
         elif x > 20 and y < 0:
             print "reversing right %d" % x
-            send_command(ROBOTICSNET_COMMAND_REVERSERIGHT, host, port, x/2)
+            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
 
         elif y > (10):
             print "forward %d" % y
@@ -90,30 +96,31 @@ def input_listener(host, port, events, lock, joystick):
             print "stop"
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
         
-        time.sleep(CONTROLLER_SLEEP_INTERVAL)
+        # Save joystick value
+        last = (x,y)
     
     # send one final stop command. Reset controller stop event
     send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
-    events[ROBOTICSBASE_STOP_LISTENER].clear()
 
-def spawn_input_process(host, port, events, lock):
+def spawn_joystick_process(host, port, events, lock):
     """
-    Spawns an input process, which gets input from keyboard or controller and sends it to the rover.
+    Spawns a joystick input process, which gets input from controller and sends it to the rover.
     events is an array of process events that keep track of basestation events (Such as the stream video command and whether the controller is active)
     lock is a process lock which prevents clients from sending messages concurrently
     """
     
     pygame.init()
+    events[ROBOTICSBASE_STOP_LISTENER].clear()
     
     try:
         joystick = get_joystick()
         joystick.init()
         
-        input_process = multiprocessing.Process(target=input_listener, args=(host, port, events, lock, joystick))
-        input_process.start()
+        joystick_process = multiprocessing.Process(target=joystick_listener, args=(host, port, events, lock, joystick))
+        joystick_process.start()
         
         # Wait for process to finish, then deinit pygame
-        input_process.join()
+        joystick_process.join()
         
     except InputException as e:
         print "Input error!"
@@ -130,7 +137,7 @@ def main():
     port = int(raw_input("Enter port: "))
     events = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
     lock = multiprocessing.Lock()
-    spawn_input_process(host, port, events, lock)
+    spawn_joystick_process(host, port, events, lock)
     
 main()
 

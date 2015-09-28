@@ -4,6 +4,7 @@ import roboticsbase
 
 # requirements and links can be added and removed here. PyGTK does not support distutils on linux so it is not included for now.
 REQUIREMENTS = [
+    'roboticsnet',
 ]
 
 DEPENDENCY_LINKS = [
