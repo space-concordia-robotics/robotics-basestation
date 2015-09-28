@@ -3,6 +3,22 @@
 from roboticsbase.common_constants import *
 from roboticsbase.base_window import BaseWindow
 
+try:
+    import pygtk
+    pygtk.require('2.0')
+    import gtk
+except ImportError:
+    print "You need pygtk 2.x in order to run the basestation software"
+    print "Install pygtk via your distributions recommended way."
+    exit()
+
+try:
+    import pygame
+except ImportError:
+    print "You need to install pygame 1.9.x"
+    print "Install pygame via your distributions recommended way."
+    exit()
+
 def on_right_click(data, event_button, event_time):
     print "herp derp"
 
