@@ -3,9 +3,11 @@ import threading
 
 from roboticsnet.gateway_constants import ROBOTICSNET_PORT
 from mjpg import VideoThread
+
 import pygtk
 pygtk.require('2.0')
 import gtk
+
 import urllib
 import gobject
 import threading
@@ -23,7 +25,7 @@ class BaseWindow:
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", gtk.main_quit)
         self.window.set_default_size(500, 800)
-        
+
         #video stream
         self.img = gtk.Image()
         self.img2 = gtk.Image()
@@ -47,13 +49,13 @@ class BaseWindow:
         self.widget_box.pack_start(self.button2)    # test button
         self.button1.set_size_request(400,30)
         self.button2.set_size_request(400,30)
-        
+
         #exit button
         self.exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
         self.exit_button.connect("clicked", self.destroy)
         self.exit_button.set_size_request(400,30)
         self.widget_box.pack_start(self.exit_button,fill=False)
-        
+
         self.main_box.pack_start(self.video_box)
         self.main_box.pack_start(self.widget_box)
         self.window.add(self.main_box)
@@ -73,10 +75,10 @@ class BaseWindow:
         except:
             print "no video stream"
 
-        
+
         #spawning joystick thread
-        
-        
+
+
         gtk.main()
         self.t.quit = True
 
@@ -101,7 +103,7 @@ class BaseWindow:
 
     def destroy(self, widget, data=None):
         gtk.main_quit()
-   
+
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
         # furthermore, events in e can be used in the window to trigger events
