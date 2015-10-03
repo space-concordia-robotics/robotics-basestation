@@ -30,6 +30,5 @@ icon.connect('popup-menu', on_right_click)
 icon.connect('activate', on_left_click)
 
 base = BaseWindow()
-base.main()
 
 

@@ -2,8 +2,10 @@ from common_constants import *
 import threading
 
 from roboticsnet.gateway_constants import ROBOTICSNET_PORT
-from mjpg import VideoThread
-
+try:
+    from mjpg import VideoThread
+except:
+    print ""
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -41,6 +43,8 @@ class BaseWindow:
         self.img2 = gtk.Image()
         self.img.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img2.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
+        self.img.set_size_request(600,500)
+        self.img2.set_size_request(600,500)
         self.img.show()
         self.img2.show()
         #widget that contains other widgets
@@ -48,6 +52,7 @@ class BaseWindow:
         self.main_box.show()
         #buttons for starting and stopping the joystick listener
         self.joystick_buttons = gtk.VBox()
+
         self.button1 = gtk.Button("(Re)start joystick listener")
         self.button2 = gtk.Button("Stop joystick listener")
         self.button1.connect("clicked",self.start_joystick)
@@ -68,8 +73,26 @@ class BaseWindow:
         self.button3.connect("clicked",self.start_video)
         self.button4 = gtk.Button("Stop video stream")
         self.button4.connect("clicked",self.stop_video)
+        self.button5 = gtk.Button("Show video")
+        self.button5.connect("clicked",self.show_video)
         self.joystick_buttons.pack_start(self.button3)
         self.joystick_buttons.pack_start(self.button4)
+        self.joystick_buttons.pack_start(self.button5)
+        
+        self.textboxes = gtk.HBox()
+        self.ipbox = gtk.Entry(max=15)
+        self.portbox = gtk.Entry(max=5)
+        self.ipbox.text = "Stream IP"
+        self.ipbox.show()
+        self.portbox.text = "Stream Port"
+        self.portbox.show()
+        self.exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
+        self.exit_button.connect("clicked", self.destroy)
+        self.exit_button.set_size_request(200,30)
+        self.joystick_buttons.pack_start(self.exit_button)
+        self.joystick_buttons.pack_start(self.ipbox)
+        self.joystick_buttons.pack_start(self.portbox)
+
 
         self.widget_box = gtk.HBox(False, 0)
         self.video_box = gtk.HBox(False,0)
@@ -83,15 +106,14 @@ class BaseWindow:
 
         self.button3.set_size_request(400,30)
         self.button4.set_size_request(400,30)
-        
+        self.button5.set_size_request(400,30)
         #exit button
-        self.exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
-        self.exit_button.connect("clicked", self.destroy)
-        self.exit_button.set_size_request(400,30)
-        self.widget_box.pack_start(self.exit_button,fill=False)
+
+
 
         self.main_box.pack_start(self.video_box)
         self.main_box.pack_start(self.widget_box)
+        self.main_box.pack_start(self.textboxes)
         self.window.add(self.main_box)
         self.window.show_all()
 
@@ -101,13 +123,7 @@ class BaseWindow:
         self.window.connect("destroy", self.destroy)
 
         #creating video thread
-        try:
-            self.t = VideoThread(self.img)
-            self.t2 = VideoThread(self.img2)
-            self.t2.start()
-            self.t.start()
-        except:
-            print "no video stream"
+
 
 
         #spawning joystick thread
@@ -143,13 +159,23 @@ class BaseWindow:
             print "no video stream to quit"
         gtk.main_quit()
 
-        
+    def show_video(self, event):
+        try:
+            self.t = VideoThread(self.img,self.ipbox.text,self.portbox.text)
+            self.t2 = VideoThread(self.img2,self.ipbox.text,self.portbox.text)
+            self.t2.start()
+            self.t.start()
+        except:
+            print "no video stream"
+            
+    
     def start_video(self, event):
         try:
             sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
             sendcommand(ROBOTICSNET_COMMAND_START_VID)
         except:
             print "cannot start video"
+        
         
     def stop_video(self, event):
         try:

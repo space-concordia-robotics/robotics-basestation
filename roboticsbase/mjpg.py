@@ -5,22 +5,22 @@ import urllib
 import gobject
 import threading
 
-streamip=raw_input("Stream IP\n>")
-streamport=raw_input("Port\n>")
 
 
-STREAM_URL = 'http://'+streamip+":"+streamport+"/?action=stream"
 
-class VideoThread(threading.Thread):
+class VideoThread(threading.Thread,streamip,streamport):
     '''
     A background thread that takes the MJPEG stream and
     updates the GTK image.
     '''
-    def __init__(self, widget):
+    def __init__(self, widget, streamip, streamport):
         super(VideoThread, self).__init__()
         self.widget = widget
         self.quit = False
         print 'connecting to', STREAM_URL
+        self.streamip = streamip
+        self.streamport = streamport
+        self.STREAM_URL = 'http://'+streamip+":"+streamport+"/?action=stream"
         self.stream = urllib.urlopen(STREAM_URL)
 
     def get_raw_frame(self):

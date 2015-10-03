@@ -139,5 +139,6 @@ def main():
     lock = multiprocessing.Lock()
     spawn_joystick_process(host, port, events, lock)
     
-main()
+if __name__ == "__main__":\
+    main()
 
