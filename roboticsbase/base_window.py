@@ -9,6 +9,11 @@ import gtk
 import urllib
 import gobject
 import threading
+import multiprocessing
+from send_command import send_locked_command
+from roboticsnet.gateway_constants import *
+from roboticsnet.roboticsnet_exception import RoboticsnetException
+from roboticsnet.client.rover_client import RoverClient
 
 from joystick_listener import spawn_joystick_process
 
@@ -17,8 +22,13 @@ from joystick_listener import spawn_joystick_process
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
+        self.lock = multiprocessing.Lock()
+        self.client = RoverClient("localhost", 5000)
+    
+    
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
+        self.lock = multiprocessing.Lock()
         #main window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", gtk.main_quit)
@@ -34,19 +44,42 @@ class BaseWindow:
         #widget that contains other widgets
         self.main_box=gtk.VBox()
         self.main_box.show()
-        #buttons to go inside the widget widget
-        self.button1 = gtk.Button("This is button1")
-        self.button2 = gtk.Button("This is button2")
+        #buttons for starting and stopping the joystick listener
+        self.joystick_buttons = gtk.VBox()
+        self.button1 = gtk.Button("(Re)start joystick listener")
+        self.button2 = gtk.Button("Stop joystick listener")
+        self.button1.connect("clicked",self.start_joystick)
+        self.button2.connect("clicked",self.stop_joystick)
+        #self.textbox = GtkText(None, None)
+        self.joystick_buttons.pack_start(self.button1)
+        self.joystick_buttons.pack_start(self.button2)
+        #self.joystick_buttons.pack_start(self.textbox)
+        #self.textbox.set_editable(editable)
+        #self.textbox.set_word_wrap(word_wrap)
+        #elf.textbox.set_point(0)
+        #elf.textbox.insert_defaults(string)
+        #res = self.textbox.backward_delete(self.textbox.get_length())
+        
+        #buttons for starting and stopping the video stream
+        self.video_buttons = gtk.VBox()
+        self.button3 = gtk.Button("(Re)start video stream")
+        self.button3.connect("clicked",self.start_video)
+        self.button4 = gtk.Button("Stop video stream")
+        self.button4.connect("clicked",self.stop_video)
+        self.joystick_buttons.pack_start(self.button3)
+        self.joystick_buttons.pack_start(self.button4)
 
         self.widget_box = gtk.HBox(False, 0)
         self.video_box = gtk.HBox(False,0)
 
         self.video_box.pack_start(self.img)
         self.video_box.pack_start(self.img2)
-        self.widget_box.pack_start(self.button1)    # test button
-        self.widget_box.pack_start(self.button2)    # test button
+        self.widget_box.pack_start(self.joystick_buttons)    # test button
+        self.widget_box.pack_start(self.video_buttons)    # test button
         self.button1.set_size_request(400,30)
         self.button2.set_size_request(400,30)
+        self.button3.set_size_request(400,30)
+        self.button4.set_size_request(400,30)
         
         #exit button
         self.exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
@@ -78,7 +111,7 @@ class BaseWindow:
         
         
         gtk.main()
-        self.t.quit = True
+        
 
     def delete_event(self, widget, event, data=None):
         msg = "Are you sure you want to quit?"
@@ -100,14 +133,49 @@ class BaseWindow:
             return True
 
     def destroy(self, widget, data=None):
+        try:
+            self.t.quit = True
+            self.t2.quit = True
+        except:
+            print "no video stream to quit"
         gtk.main_quit()
+        
+    def start_video(self, event):
+        try:
+            sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
+            sendcommand(ROBOTICSNET_COMMAND_START_VID)
+        except:
+            print "cannot start video"
+        
+    def stop_video(self, event):
+        try:
+            sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
+        except:
+            print "cannot stop video"
+
+    def stop_joystick(self, event):
+        try:
+            events[ROBOTICSBASE_STOP_LISTENER].set()
+        except:
+            print "cannot stop joystick thread"
+    
+    def start_joystick(self, event):
+        try:
+            events[ROBOTICSBASE_STOP_LISTENER].set()
+            spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
+        except:
+            print "no joystick connected"
+    
+    def print_text(self, text):
+        pass
+
+    def sendcommand(command):
+        command_process = multiprocessing.Process(target = send_locked_command, args=(self.client, self.lock, command, 0))
+        command_process.start() 
+
    
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
         # furthermore, events in e can be used in the window to trigger events
         e = [threading.Event() for i in range(NUM_BUTTON_EVENTS)]
-        try:
-            spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
-        except:
-            print "no joystick connected"
         gtk.main()
