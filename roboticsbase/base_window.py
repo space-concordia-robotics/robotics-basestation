@@ -134,7 +134,7 @@ class BaseWindow:
 
     def delete_event(self, widget, event, data=None):
         msg = "Are you sure you want to quit?"
-        md = gtk.MessageDialog(self.app_window,
+        md = gtk.MessageDialog(self.window,
                                gtk.DIALOG_DESTROY_WITH_PARENT,
                                gtk.MESSAGE_QUESTION,
                                gtk.BUTTONS_YES_NO,
