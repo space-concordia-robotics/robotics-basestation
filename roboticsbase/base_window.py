@@ -145,7 +145,6 @@ class BaseWindow:
 
         if response == gtk.RESPONSE_YES:
             md.destroy()
-            self.destroy(self, widget)
             return False
         else:
             md.destroy()
