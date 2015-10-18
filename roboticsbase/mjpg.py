@@ -6,9 +6,7 @@ import gobject
 import threading
 
 
-
-
-class VideoThread(threading.Thread,streamip,streamport):
+class VideoThread(threading.Thread):
     '''
     A background thread that takes the MJPEG stream and
     updates the GTK image.
@@ -17,11 +15,11 @@ class VideoThread(threading.Thread,streamip,streamport):
         super(VideoThread, self).__init__()
         self.widget = widget
         self.quit = False
-        print 'connecting to', STREAM_URL
         self.streamip = streamip
         self.streamport = streamport
         self.STREAM_URL = 'http://'+streamip+":"+streamport+"/?action=stream"
-        self.stream = urllib.urlopen(STREAM_URL)
+        print 'connecting to', self.STREAM_URL
+        self.stream = urllib.urlopen(self.STREAM_URL)
 
     def get_raw_frame(self):
         '''
