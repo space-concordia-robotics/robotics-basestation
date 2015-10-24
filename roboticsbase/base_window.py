@@ -97,7 +97,7 @@ class BaseWindow:
         self.btn_video_show.connect("clicked",self.show_video)
         self.widget_box.attach(self.btn_video_start, 1, 2, 0, 1)
         self.widget_box.attach(self.btn_video_stop, 1, 2, 1, 2)
-        self.widget_box.attach(self.btn_video_show, 4, 5, 0, 1)
+        self.widget_box.attach(self.btn_video_show, 2, 3, 0, 1)
 
         # self.button1.set_size_request(100,30)
         # self.button2.set_size_request(100,30)
@@ -106,10 +106,13 @@ class BaseWindow:
 
         # Movement
         self.btn_snapshot = gtk.Button("Snapshot")
+        self.btn_snapshot.connect("clicked", self.snapshot)
         self.btn_panoramic = gtk.Button("Panoramic")
+        self.btn_panoramic.connect("clicked",self.panoramic)
         self.btn_connect = gtk.Button("Connect")
         self.btn_connect.connect("clicked", self.connect)
-        self.btn_right = gtk.Button("")
+        self.btn_quit_video = gtk.Button("Stop Video Thread")
+        self.btn_quit_video.connect("clicked",self.quit_video)
 
         self.ip_box = gtk.Entry(max=15)
         self.port_box = gtk.Entry(max=5)
@@ -118,10 +121,10 @@ class BaseWindow:
         self.port_box.set_text("Port")
         self.option_box.set_text("Connect to...")
 
-        self.widget_box.attach(self.btn_snapshot, 2, 3, 0, 1)
-        self.widget_box.attach(self.btn_panoramic, 2, 3, 1, 2)
-        self.widget_box.attach(self.btn_connect, 3, 4, 0, 1)
-        self.widget_box.attach(self.btn_right, 3, 4, 1, 2)
+        self.widget_box.attach(self.btn_snapshot, 3, 4, 0, 1)
+        self.widget_box.attach(self.btn_panoramic, 3, 4, 1, 2)
+        self.widget_box.attach(self.btn_connect, 4, 5, 0, 1)
+        self.widget_box.attach(self.btn_quit_video, 2, 3, 1, 2)
 
 
 
@@ -140,13 +143,15 @@ class BaseWindow:
         ###########################
 
         self.status_box = gtk.VBox(False, 0)
-        text1 = gtk.TextView()
-        text1.set_editable(False)
+        self.text1 = gtk.TextView()
+        self.text1.set_editable(False)
+        self.text1.set_size_request(100,30)
 
-        text1_buffer = text1.get_buffer()
-        text1_buffer.set_text("Testing!!!!!")
+        self.text1_buffer = self.text1.get_buffer()
+        self.text1_buffer.set_text("Testing!!!!!")
+        
 
-        self.status_box.pack_start(text1)
+        self.status_box.pack_start(self.text1)
         
         self.entry_box = gtk.VBox(False,0)
         self.entry_box.pack_start(self.ip_box)
@@ -165,7 +170,7 @@ class BaseWindow:
         #self.window.set_default_size(1500, 2000)
         self.window.set_size_request(1200, 700)
 
-        self.window.set_resizable(False)
+        self.window.set_resizable(True)
         self.window.set_title("Basestation")
         self.window.set_position(gtk.WIN_POS_CENTER)
 
@@ -266,6 +271,12 @@ class BaseWindow:
             print "no joystick connected"
     
     def print_text(self, text):
+        pass
+
+    def snapshot(self, event):
+        pass
+        
+    def panoramic(self, event):
         pass
 
     def sendcommand(self, command):
