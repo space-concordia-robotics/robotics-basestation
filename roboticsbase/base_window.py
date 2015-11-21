@@ -97,7 +97,7 @@ class BaseWindow:
         self.btn_video_show.connect("clicked",self.show_video)
         self.widget_box.attach(self.btn_video_start, 1, 2, 0, 1)
         self.widget_box.attach(self.btn_video_stop, 1, 2, 1, 2)
-        self.widget_box.attach(self.btn_video_show, 4, 5, 0, 1)
+        self.widget_box.attach(self.btn_video_show, 2, 3, 0, 1)
 
         # self.button1.set_size_request(100,30)
         # self.button2.set_size_request(100,30)
@@ -105,21 +105,26 @@ class BaseWindow:
         # self.button4.set_size_request(100,30)
 
         # Movement
-        self.btn_forward = gtk.Button("Forward")
-        self.btn_backward = gtk.Button("Backward")
-        self.btn_left = gtk.Button("Left")
-        self.btn_right = gtk.Button("Right")
+        self.btn_snapshot = gtk.Button("Snapshot")
+        self.btn_snapshot.connect("clicked", self.snapshot)
+        self.btn_panoramic = gtk.Button("Panoramic")
+        self.btn_panoramic.connect("clicked",self.panoramic)
+        self.btn_connect = gtk.Button("Connect")
+        self.btn_connect.connect("clicked", self.connect)
+        self.btn_quit_video = gtk.Button("Stop Video Thread")
+        self.btn_quit_video.connect("clicked",self.quit_video)
 
-        self.ipbox = gtk.Entry(max=15)
-        self.portbox = gtk.Entry(max=5)
-        self.ipbox.set_text("IP")
-        self.portbox.set_text("PORT")
+        self.ip_box = gtk.Entry(max=15)
+        self.port_box = gtk.Entry(max=5)
+        self.option_box = gtk.Entry(max=13)
+        self.ip_box.set_text("IP")
+        self.port_box.set_text("Port")
+        self.option_box.set_text("Connect to...")
 
-
-        self.widget_box.attach(self.btn_forward, 2, 3, 0, 1)
-        self.widget_box.attach(self.btn_backward, 2, 3, 1, 2)
-        self.widget_box.attach(self.btn_left, 3, 4, 0, 1)
-        self.widget_box.attach(self.btn_right, 3, 4, 1, 2)
+        self.widget_box.attach(self.btn_snapshot, 3, 4, 0, 1)
+        self.widget_box.attach(self.btn_panoramic, 3, 4, 1, 2)
+        self.widget_box.attach(self.btn_connect, 4, 5, 0, 1)
+        self.widget_box.attach(self.btn_quit_video, 2, 3, 1, 2)
 
 
 
@@ -138,17 +143,20 @@ class BaseWindow:
         ###########################
 
         self.status_box = gtk.VBox(False, 0)
-        text1 = gtk.TextView()
-        text1.set_editable(False)
+        self.text1 = gtk.TextView()
+        self.text1.set_editable(False)
+        self.text1.set_size_request(100,30)
 
-        text1_buffer = text1.get_buffer()
-        text1_buffer.set_text("Testing!!!!!")
+        self.text1_buffer = self.text1.get_buffer()
+        self.text1_buffer.set_text("Testing!!!!!")
+        
 
-        self.status_box.pack_start(text1)
+        self.status_box.pack_start(self.text1)
         
         self.entry_box = gtk.VBox(False,0)
-        self.entry_box.pack_start(self.ipbox)
-        self.entry_box.pack_start(self.portbox)
+        self.entry_box.pack_start(self.ip_box)
+        self.entry_box.pack_start(self.port_box)
+        self.entry_box.pack_start(self.option_box)
 
         ###########################
         # Main window things
@@ -162,7 +170,7 @@ class BaseWindow:
         #self.window.set_default_size(1500, 2000)
         self.window.set_size_request(1200, 700)
 
-        self.window.set_resizable(False)
+        self.window.set_resizable(True)
         self.window.set_title("Basestation")
         self.window.set_position(gtk.WIN_POS_CENTER)
 
@@ -191,18 +199,6 @@ class BaseWindow:
         # Used when closing window.
         self.window.connect("delete_event", self.delete_event)
         self.window.connect("destroy", self.destroy)
-
-        #creating video thread
-        # try:
-        #     self.t = VideoThread(self.img)
-        #     self.t2 = VideoThread(self.img2)
-        #     self.t2.start()
-        #     self.t.start()
-        # except:
-        #     print "no video stream"
-
-        
-        #spawning joystick thread
         
         
         gtk.main()
@@ -228,11 +224,6 @@ class BaseWindow:
             return True
 
     def destroy(self, widget, data=None):
-        try:
-            self.t.quit = True
-            self.t2.quit = True
-        except:
-            print "no video stream to quit"
         gtk.main_quit()
         
     def start_video(self, event):
@@ -251,14 +242,20 @@ class BaseWindow:
     
     def show_video(self, event):
         try:
-            self.t = VideoThread(self.img,self.ipbox.get_text(),self.portbox.get_text())
-            self.t2 = VideoThread(self.img2,self.ipbox.get_text(),self.portbox.get_text())
+            self.t = VideoThread(self.img,self.ip_box.get_text(),self.port_box.get_text())
+            self.t2 = VideoThread(self.img2,self.ip_box.get_text(),self.port_box.get_text())
             self.t2.start()
             self.t.start()
         except:
             print "no video stream"
             traceback.print_exc(file=sys.stdout)
-     
+    
+    def quit_video(self, event):
+        try:
+            self.t.quit = True
+            self.t2.quit = True
+        except:
+            print "no video stream to quit"
     
     
     def stop_joystick(self, event):
@@ -269,7 +266,6 @@ class BaseWindow:
     
     def start_joystick(self, event):
         try:
-            events[ROBOTICSBASE_STOP_LISTENER].set()
             spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
         except:
             print "no joystick connected"
@@ -277,16 +273,26 @@ class BaseWindow:
     def print_text(self, text):
         pass
 
+    def snapshot(self, event):
+        pass
+        
+    def panoramic(self, event):
+        pass
+
     def sendcommand(self, command):
-        self.client.setHost(self.ipbox.get_text())
-        self.client.setPort(int(self.portbox.get_text()))
-        print self.client.getHost(), self.client.getPort()
         command_process = multiprocessing.Process(target = send_locked_command, args=(self.client, self.lock, command, 0))
         command_process.start()
         
     def connect(self):
-        pass
-
+        if "server" in option_box.get_text().lower():
+            self.client.setHost(self.ip_box.get_text())
+            self.client.setPort(int(self.port_box.get_text()))
+        elif "1" in option_box.get_text().lower():
+            pass
+        elif "2" in option_box.get_text().lower():
+            pass
+        else:
+            option_box.set_text("Invalid option")
    
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
