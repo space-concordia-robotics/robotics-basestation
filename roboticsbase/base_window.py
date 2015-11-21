@@ -101,11 +101,6 @@ class BaseWindow:
         self.widget_box.attach(self.btn_video_stop, 1, 2, 1, 2)
         self.widget_box.attach(self.btn_video_show, 2, 3, 0, 1)
 
-        # self.button1.set_size_request(100,30)
-        # self.button2.set_size_request(100,30)
-        # self.button3.set_size_request(100,30)
-        # self.button4.set_size_request(100,30)
-
         # Movement
         self.btn_snapshot = gtk.Button("Snapshot")
         self.btn_snapshot.connect("clicked", self.snapshot)
@@ -134,7 +129,6 @@ class BaseWindow:
         #exit button
         self.btn_exit = gtk.Button(stock=gtk.STOCK_QUIT)
         self.btn_exit.connect("clicked", self.destroy)
-        # self.exit_button.set_size_request(100,30)
 
         self.widget_box.attach(self.btn_exit, 4, 5, 1, 2)
 
@@ -168,7 +162,6 @@ class BaseWindow:
         # Initialize window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", gtk.main_quit)
-        #self.window.set_default_size(1500, 2000)
         self.window.set_size_request(1200, 700)
 
         self.window.set_resizable(True)
@@ -188,7 +181,6 @@ class BaseWindow:
 
 
         self.main_box.pack_start(self.top_container)
-        #self.main_box.pack_start(self.widget_box)
 
         self.window.add(self.main_box)
         self.window.show_all()
