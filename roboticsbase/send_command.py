@@ -11,28 +11,14 @@ def send_locked_command(client, lock, command, value=0):
     print "Sending %d to %s:%d:" % (command, client.getHost(), client.getPort())
     
     try:
-        if (command == ROBOTICSNET_COMMAND_GRACEFUL):
-            client.graceful()
-        elif (command == ROBOTICSNET_COMMAND_FORWARD):
-            client.forward(value)
-        elif (command == ROBOTICSNET_COMMAND_REVERSE):
-            client.reverse(value)
-        elif (command == ROBOTICSNET_COMMAND_FORWARDLEFT):
-            client.forwardLeft(value)
-        elif (command == ROBOTICSNET_COMMAND_FORWARDRIGHT):
-            client.forwardRight(value)
-        elif (command == ROBOTICSNET_COMMAND_REVERSELEFT):
-            client.reverseLeft(value)
-        elif (command == ROBOTICSNET_COMMAND_REVERSERIGHT):
-            client.reverseRight(value)
-        elif (command == ROBOTICSNET_COMMAND_STOP):
-            client.stop()
-        elif (command == ROBOTICSNET_COMMAND_QUERYPROC):
+        """0x20-0x23 are the camera commands"""
+        if (command == ROBOTICSNET_SYSTEM_GRACEFUL or command == ROBOTICSNET_SENSOR_INFO or command in range (0x20,0x24)):
+            client.sendCommand(command)
+            """These are the ROBOTICSNET_DRIVE_... commands"""
+        elif (command in range(0x07):
+            client.timedCommand(command, value)
+        elif (command == ROBOTICSNET_SYSTEM_QUERYPROC):
             client.query()
-        elif (command == ROBOTICSNET_COMMAND_START_VID):
-            client.startVideo()
-        elif (command == ROBOTICSNET_COMMAND_STOP_VID):
-            client.stopVideo()
             
         print "Sent %d:%d." % (command, value)
 
