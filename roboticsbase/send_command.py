@@ -15,7 +15,7 @@ def send_locked_command(client, lock, command, value=0):
         if (command == ROBOTICSNET_SYSTEM_GRACEFUL or command == ROBOTICSNET_SENSOR_INFO or command in range (0x20,0x24)):
             client.sendCommand(command)
             """These are the ROBOTICSNET_DRIVE_... commands"""
-        elif (command in range(0x07):
+        elif (command in range(0x07)):
             client.timedCommand(command, value)
         elif (command == ROBOTICSNET_SYSTEM_QUERYPROC):
             client.query()

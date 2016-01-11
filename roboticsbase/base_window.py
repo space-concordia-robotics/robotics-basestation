@@ -14,7 +14,7 @@ import multiprocessing
 from send_command import send_locked_command
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 
 from joystick_listener import spawn_joystick_process
 
