@@ -42,7 +42,7 @@ class BaseWindow:
 
         self.img = gtk.Image()
         self.img2 = gtk.Image()
-        temp_img = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
+        #temp_img = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
         self.img.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img2.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img.show()
@@ -59,12 +59,14 @@ class BaseWindow:
         self.image_box = gtk.Fixed()
 
         # Rescaling image
+        """
         image_test = gtk.Image()
         temp_image = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
         scaled_image = temp_image.scale_simple(400, 300, gtk.gdk.INTERP_BILINEAR)
         image_test.set_from_pixbuf(scaled_image)
 
         self.image_box.put(image_test, 0, 0)
+"""
 
         rover_icon = gtk.Image()
         rover_icon.set_from_stock(gtk.STOCK_HOME,gtk.ICON_SIZE_BUTTON)
