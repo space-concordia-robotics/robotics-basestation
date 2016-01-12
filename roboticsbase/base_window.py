@@ -11,7 +11,6 @@ import urllib
 import gobject
 import threading
 import multiprocessing
-from send_command import send_locked_command
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
 from roboticsnet.client.rover_client import RoverClient
@@ -267,7 +266,7 @@ class BaseWindow:
 
     def start_joystick(self, event):
         try:
-            spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
+            spawn_joystick_thread(self.client, e)
         except:
             print "no joystick connected"
 
