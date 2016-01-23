@@ -11,10 +11,10 @@ import urllib
 import gobject
 import threading
 import multiprocessing
-from send_command import send_locked_command
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from roboticsnet.rover_client import RoverClient
+from roboticsnet.client.rover_client import RoverClient
+from clientproc import ClientProcess
 
 from joystick_listener import spawn_joystick_process
 
@@ -24,10 +24,10 @@ class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
         self.lock = multiprocessing.Lock()
-        self.client = RoverClient("localhost", 5000)
+        self.client = ClientProcess("localhost", 10666)
         self.isconnected = False
-    
-    
+
+
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
         self.lock = multiprocessing.Lock()
@@ -149,10 +149,10 @@ class BaseWindow:
 
         self.text1_buffer = self.text1.get_buffer()
         self.text1_buffer.set_text("Testing!!!!!")
-        
+
 
         self.status_box.pack_start(self.text1)
-        
+
         self.entry_box = gtk.VBox(False,0)
         self.entry_box.pack_start(self.ip_box)
         self.entry_box.pack_start(self.port_box)
@@ -199,10 +199,10 @@ class BaseWindow:
         # Used when closing window.
         self.window.connect("delete_event", self.delete_event)
         self.window.connect("destroy", self.destroy)
-        
-        
+
+
         gtk.main()
-        
+
 
     def delete_event(self, widget, event, data=None):
         msg = "Are you sure you want to quit?"
@@ -225,21 +225,21 @@ class BaseWindow:
 
     def destroy(self, widget, data=None):
         gtk.main_quit()
-        
+
     def start_video(self, event):
         try:
-            self.sendcommand(ROBOTICSNET_COMMAND_START_VID)
+            self.sendcommand(ROBOTICSNET_CAMERA_START_VID)
         except:
             print "cannot start video"
             traceback.print_exc(file=sys.stdout)
-            
-        
+
+
     def stop_video(self, event):
         try:
-            self.sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
+            self.sendcommand(ROBOTICSNET_CAMERA_STOP_VID)
         except:
             print "cannot stop video"
-    
+
     def show_video(self, event):
         try:
             self.t = VideoThread(self.img,self.ip_box.get_text(),self.port_box.get_text())
@@ -249,51 +249,50 @@ class BaseWindow:
         except:
             print "no video stream"
             traceback.print_exc(file=sys.stdout)
-    
+
     def quit_video(self, event):
         try:
             self.t.quit = True
             self.t2.quit = True
         except:
             print "no video stream to quit"
-    
-    
+
+
     def stop_joystick(self, event):
         try:
             events[ROBOTICSBASE_STOP_LISTENER].set()
         except:
             print "cannot stop joystick thread"
-    
+
     def start_joystick(self, event):
         try:
-            spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
+            spawn_joystick_thread(self.client, e)
         except:
             print "no joystick connected"
-    
+
     def print_text(self, text):
         pass
 
     def snapshot(self, event):
         pass
-        
+
     def panoramic(self, event):
         pass
 
     def sendcommand(self, command):
-        command_process = multiprocessing.Process(target = send_locked_command, args=(self.client, self.lock, command, 0))
-        command_process.start()
-        
+        self.client.send_command(command, 0)
+
     def connect(self):
         if "server" in option_box.get_text().lower():
-            self.client.setHost(self.ip_box.get_text())
-            self.client.setPort(int(self.port_box.get_text()))
+            self.client.set_host(self.ip_box.get_text())
+            self.client.set_port(int(self.port_box.get_text()))
         elif "1" in option_box.get_text().lower():
             pass
         elif "2" in option_box.get_text().lower():
             pass
         else:
             option_box.set_text("Invalid option")
-   
+
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
         # furthermore, events in e can be used in the window to trigger events

@@ -3,8 +3,7 @@ import time
 import multiprocessing
 
 from input_exception import InputException
-from send_command import send_locked_command
-from roboticsnet.rover_client import RoverClient
+from roboticsnet.client.rover_client import RoverClient
 
 from pygame.locals import *
 from common_constants import *
@@ -32,17 +31,15 @@ def get_joystick_value(joystick):
     """
     x = int(joystick.get_axis(AXIS_RSTICK_X)*63)
     y = int((-joystick.get_axis(AXIS_RSTICK_Y))*63)
-    
+
     return (x,y)
 
-def joystick_listener(host, port, events, lock, joystick):
+def joystick_listener(client_process, events, joystick):
     """
     Main movement control thread - interprets commands from joystick and sends them to rover.
     """
-    client = RoverClient(host, port)
-    print "Controller client established with %s:%d:" % (client.getHost(), client.getPort())
 
-    last = (0, 0)    
+    last = (0, 0)
     while events[ROBOTICSBASE_STOP_LISTENER].is_set() == False:
         # Sleep before starting next cycle
         time.sleep(CONTROLLER_SLEEP_INTERVAL)
@@ -54,10 +51,10 @@ def joystick_listener(host, port, events, lock, joystick):
                     events[ROBOTICSBASE_STOP_LISTENER].set()
                 elif event.button == BUTTON_B:
                     if events[ROBOTICSBASE_STREAM_VIDEO].is_set():
-                        send_locked_command(client, lock, ROBOTICSNET_COMMAND_START_VID)
+                        client_process.send_command(ROBOTICSNET_COMMAND_START_VID)
                         events[ROBOTICSBASE_STREAM_VIDEO].clear()
                     else:
-                        send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP_VID)
+                        client_process.send_command(ROBOTICSNET_COMMAND_STOP_VID)
                         events[ROBOTICSBASE_STREAM_VIDEO].set()
                 # elif...
 
@@ -70,62 +67,62 @@ def joystick_listener(host, port, events, lock, joystick):
 
         if x < (-20) and y >= 0:
             print "forward left %d" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDLEFT, -x/2)
+            client_process.send_command(ROBOTICSNET_COMMAND_FORWARDLEFT, -x/2)
 
         elif x > (20) and y >= 0:
             print "forward right %d" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
+            client_process.send_command(ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
 
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, -x/2)
+            client_process.send_command(ROBOTICSNET_COMMAND_REVERSELEFT, -x/2)
 
         elif x > 20 and y < 0:
             print "reversing right %d" % x
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
+            client_process.send_command(ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
 
         elif y > (10):
             print "forward %d" % y
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARD, y)
-    
+            client_process.send_command(ROBOTICSNET_COMMAND_FORWARD, y)
+
         elif y < (-10):
             print "reverse %d" % y
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSE, -y)
-                
+            client_process.send_command(ROBOTICSNET_COMMAND_REVERSE, -y)
+
         else:
             print "stop"
-            send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
-        
+            client_process.send_command(ROBOTICSNET_COMMAND_STOP)
+
         # Save joystick value
         last = (x,y)
-    
-    # send one final stop command. Reset controller stop event
-    send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
 
-def spawn_joystick_process(host, port, events, lock):
+    # send one final stop command. Reset controller stop event
+    client_process.send_command(ROBOTICSNET_COMMAND_STOP)
+
+def spawn_joystick_process(client_process, events):
     """
     Spawns a joystick input process, which gets input from controller and sends it to the rover.
     events is an array of process events that keep track of basestation events (Such as the stream video command and whether the controller is active)
     lock is a process lock which prevents clients from sending messages concurrently
     """
-    
+
     pygame.init()
     events[ROBOTICSBASE_STOP_LISTENER].clear()
-    
+
     try:
         joystick = get_joystick()
         joystick.init()
-        
-        joystick_process = multiprocessing.Process(target=joystick_listener, args=(host, port, events, lock, joystick))
+
+        joystick_process = multiprocessing.Process(target=joystick_listener, args=(client_process, events, joystick))
         joystick_process.start()
-        
+
         # Wait for process to finish, then deinit pygame
         joystick_process.join()
-        
+
     except InputException as e:
         print "Input error!"
         print e.message
-        
+
     pygame.quit()
     print "Movement process aborted."
 
@@ -138,7 +135,6 @@ def main():
     events = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
     lock = multiprocessing.Lock()
     spawn_joystick_process(host, port, events, lock)
-    
+
 if __name__ == "__main__":\
     main()
-
