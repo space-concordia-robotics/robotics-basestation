@@ -35,6 +35,7 @@ class ClientProcess():
         """
 
         kill_client_process()
+        self.process.join()
 
     def send_command(self, command, value = None):
         """
