@@ -1,6 +1,6 @@
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 from multiprocessing import Process, Pipe
 
 class ClientProcess():
