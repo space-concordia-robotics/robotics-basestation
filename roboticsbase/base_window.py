@@ -1,7 +1,8 @@
 from common_constants import *
+import os
 import threading
 import sys, traceback
-from roboticslogger.logger import Logger
+import logging
 from roboticsnet.gateway_constants import ROBOTICSNET_PORT
 from mjpg import VideoThread
 import pygtk
@@ -14,7 +15,7 @@ import multiprocessing
 from send_command import send_locked_command
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 
 from joystick_listener import spawn_joystick_process
 
@@ -27,10 +28,8 @@ class BaseWindow:
         self.client = RoverClient("localhost", 5000)
         self.isconnected = False
         #logger
-        self.logger = Logger()
-        parent_conn, child_conn = multiprocessing.Pipe()
-        p = multiprocessing.Process(target=myLogger.run, args=(child_conn,))
-        p.start()
+        logging.basicConfig(filename='basestation.log',level=logging.DEBUG)
+
 
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
@@ -43,7 +42,7 @@ class BaseWindow:
 
         self.img = gtk.Image()
         self.img2 = gtk.Image()
-        temp_img = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
+
         self.img.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img2.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img.show()
@@ -58,10 +57,11 @@ class BaseWindow:
         ############################
 
         self.image_box = gtk.Fixed()
-
+        directory = os.path.dirname("TestMap.jpg")
+        path = os.path.abspath(os.path.dirname(__file__))
+        temp_image = gtk.gdk.pixbuf_new_from_file(os.path.join(path,"TestMap.jpg"))
         # Rescaling image
         image_test = gtk.Image()
-        temp_image = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
         scaled_image = temp_image.scale_simple(400, 300, gtk.gdk.INTERP_BILINEAR)
         image_test.set_from_pixbuf(scaled_image)
 
@@ -208,9 +208,7 @@ class BaseWindow:
         md.set_title("Quit the program?")
 
         response = md.run()
-        parent_conn.send(["info", "closing base window"])
-        parent_conn.send(["done"])
-        parent_conn.close()
+        logging.info("closing base window")
         if response == gtk.RESPONSE_YES:
             md.destroy()
             self.destroy(self, widget)
@@ -225,16 +223,16 @@ class BaseWindow:
     def start_video(self, event):
         try:
             self.sendcommand(ROBOTICSNET_COMMAND_START_VID)
-            parent_conn.send(["info", "starting video stream"])
+            logging.info("starting video stream")
         except:
-            print "cannot start video"
+            logging.error("cannot start video")
             traceback.print_exc(file=sys.stdout)
             
         
     def stop_video(self, event):
         try:
             self.sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
-            parent_conn.send(["info", "stopping video stream"])
+            logging.info("stopping video stream")
         except:
             print "cannot stop video"
     
@@ -244,16 +242,16 @@ class BaseWindow:
             self.t2 = VideoThread(self.img2,self.ip_box.get_text(),self.port_box.get_text())
             self.t2.start()
             self.t.start()
-            parent_conn.send(["info", "displaying video"])
+            logging.info("displaying video")
         except:
-            print "no video stream"
-            traceback.print_exc(file=sys.stdout)
+            logging.error("cannot find stream")
+            logging.error(sys.exc_info()[0])
     
     def quit_video(self, event):
         try:
             self.t.quit = True
             self.t2.quit = True
-            parent_conn.send(["info", "stopping video display"])
+            logging.info("stopping video display")
         except:
             print "no video stream to quit"
     
@@ -261,26 +259,26 @@ class BaseWindow:
     def stop_joystick(self, event):
         try:
             events[ROBOTICSBASE_STOP_LISTENER].set()
-            parent_conn.send(["info", "stopping joystick listener"])
+            logging.info("stopping joystick listener")
         except:
-            print "cannot stop joystick thread"
+            logging.error("cannot stop joystick thread. probably doesn't exist")
     
     def start_joystick(self, event):
         try:
             spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
-            parent_conn.send(["info", "starting joystick listener"])
+            logging.info("starting joystick listener")
         except:
-            print "no joystick connected"
+            logging.error("cannot start joystick listener. It's almost definitely because there isn't one connected")
     
     def print_text(self, text):
         pass
 
     def snapshot(self, event):
-        parent_conn.send(["info", "taking snapshot"])
+        logging.info("Taking a snapshot")
         pass
         
     def panoramic(self, event):
-        parent_conn.send(["info", "taking panoramic"])
+        logging.info("Taking a panoramic")
         pass
 
     def sendcommand(self, command):
@@ -292,12 +290,12 @@ class BaseWindow:
         if "server" in self.option_box.get_text().lower():
             self.client.setHost(self.ip_box.get_text())
             self.client.setPort(int(self.port_box.get_text()))
-            parent_conn.send(["info", "basestation connecting to server"])
+            logging.info("Basestation trying to connect to server")
         elif "1" in self.option_box.get_text().lower():
-            parent_conn.send(["info", "basestation connecting to video stream 1"])
+            logging.info("Basestation trying to connect to first video stream")
             pass
         elif "2" in self.option_box.get_text().lower():
-            parent_conn.send(["info", "basestation connecting to video stream 2"])
+            logging.info("basestation connecting to video stream 2")
             pass
         else:
             self.option_box.set_text("Invalid option")

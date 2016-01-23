@@ -1,12 +1,10 @@
 import pygame
 import time
 import multiprocessing
-from roboticslogger.logger import Logger
-from multiprocessing import Process, Pipe
 
 from input_exception import InputException
 from send_command import send_locked_command
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 
 from pygame.locals import *
 from common_constants import *
@@ -43,12 +41,6 @@ def joystick_listener(host, port, events, lock, joystick):
     """
     client = RoverClient(host, port)
     print "Controller client established with %s:%d:" % (client.getHost(), client.getPort())
-    #logger
-    myLogger = Logger()
-    parent_conn, child_conn = multiprocessing.Pipe()
-    p = multiprocessing.Process(target=myLogger.run, args=(child_conn,))
-    p.start()
-    #logger
 
     last = (0, 0)    
     while events[ROBOTICSBASE_STOP_LISTENER].is_set() == False:
@@ -79,42 +71,35 @@ def joystick_listener(host, port, events, lock, joystick):
         if x < (-20) and y >= 0:
             print "forward left %d" % x
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDLEFT, -x/2)
-            parent_conn.send(["info", "joystick command: forwardleft"+str(-x/2)])
 
         elif x > (20) and y >= 0:
             print "forward right %d" % x
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
-            parent_conn.send(["info", "joystick command: forwardright"+str(x/2)])
 
 
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSELEFT, -x/2)
-            parent_conn.send(["info", "joystick command: reverseleft"+str(-x/2)])
 
 
         elif x > 20 and y < 0:
             print "reversing right %d" % x
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
-            parent_conn.send(["info", "joystick command: reverseright"+str(x/2)])
 
 
         elif y > (10):
             print "forward %d" % y
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_FORWARD, y)
-            parent_conn.send(["info", "joystick command: forward"+str(y)])
 
     
         elif y < (-10):
             print "reverse %d" % y
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_REVERSE, -y)
-            parent_conn.send(["info", "joystick command: reverse"+str(-y)])
 
                 
         else:
             print "stop"
             send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
-            parent_conn.send(["info", "joystick command: stop"])
 
         
         # Save joystick value
@@ -122,10 +107,7 @@ def joystick_listener(host, port, events, lock, joystick):
     
     # send one final stop command. Reset controller stop event
     send_locked_command(client, lock, ROBOTICSNET_COMMAND_STOP)
-    parent_conn.send(["done"])
     
-    parent_conn.close()
-
 def spawn_joystick_process(host, port, events, lock):
     """
     Spawns a joystick input process, which gets input from controller and sends it to the rover.
