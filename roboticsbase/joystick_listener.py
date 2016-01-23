@@ -4,7 +4,7 @@ import multiprocessing
 
 from input_exception import InputException
 from send_command import send_locked_command
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 
 from pygame.locals import *
 from common_constants import *
