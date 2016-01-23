@@ -53,39 +53,5 @@ class VideoThread(threading.Thread):
             # Schedule image update to happen in main thread
             gobject.idle_add(self.widget.set_from_pixbuf, pixbuf)
 
-if __name__=="__main__":
-    gobject.threads_init()
-    window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    window.connect("destroy", gtk.main_quit)
-    window.set_border_width(10)
-    
-    img = gtk.Image()
-    img.show()
-    main_box=gtk.VBox()
-    main_box.show()
-    button1 = gtk.Button("This is button1")
-    button2 = gtk.Button("This is button2")
-    main_box.pack_start(img)
-    widget_box = gtk.HBox(False, 0)
-    widget_box.pack_start(button1)    # test button
-    widget_box.pack_start(button2)    # test button
-    exit_button = gtk.Button(stock=gtk.STOCK_QUIT)
-    exit_button.connect("clicked", destroy)
-    widget_box.pack_start(exit_button)
-    main_box.pack_start(widget_box)
-    window.add(main_box)
-    window.show_all()
-
-
-        # Used when closing window.
-    window.connect("delete_event", delete_event)
-    window.connect("destroy", destroy)
-
-    t = VideoThread(img)
-    window.show()
-    t.start()
-    gtk.main()
-    t.quit = True
-
 
 
