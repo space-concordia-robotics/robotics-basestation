@@ -3,7 +3,7 @@ import os
 import threading
 import sys, traceback
 import logging
-from roboticsnet.gateway_constants import ROBOTICSNET_PORT
+from roboticsnet.gateway_constants import ROBOTICSNET_UDP_PORT
 from mjpg import VideoThread
 import pygtk
 pygtk.require('2.0')
@@ -249,7 +249,7 @@ class BaseWindow:
         except:
             logging.error("cannot find stream")
             logging.error(sys.exc_info()[0])
-            
+
     def quit_video(self, event):
         try:
             self.t.quit = True
@@ -265,10 +265,10 @@ class BaseWindow:
             logging.info("stopping joystick listener")
         except:
             logging.error("cannot stop joystick thread. probably doesn't exist")
-    
+
     def start_joystick(self, event):
         try:
-            spawn_joystick_process('localhost', ROBOTICSNET_PORT, e)
+            spawn_joystick_process('localhost', ROBOTICSNET_UDP_PORT, e)
             logging.info("starting joystick listener")
         except:
             logging.error("cannot start joystick listener. It's almost definitely because there isn't one connected")
@@ -287,9 +287,9 @@ class BaseWindow:
     def sendcommand(self, command):
         command_process = multiprocessing.Process(target = send_locked_command, args=(self.client, self.lock, command, 0))
         command_process.start()
-        
+
     def connect(self, event):
-        
+
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()))
