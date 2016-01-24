@@ -220,6 +220,7 @@ class BaseWindow:
             return True
 
     def destroy(self, widget, data=None):
+        self.client.kill_client_process()
         gtk.main_quit()
 
     def start_video(self, event):
@@ -248,6 +249,7 @@ class BaseWindow:
         except:
             logging.error("cannot find stream")
             logging.error(sys.exc_info()[0])
+            
     def quit_video(self, event):
         try:
             self.t.quit = True
@@ -266,7 +268,7 @@ class BaseWindow:
     
     def start_joystick(self, event):
         try:
-            spawn_joystick_thread('localhost', ROBOTICSNET_PORT, e)
+            spawn_joystick_process('localhost', ROBOTICSNET_PORT, e)
             logging.info("starting joystick listener")
         except:
             logging.error("cannot start joystick listener. It's almost definitely because there isn't one connected")
