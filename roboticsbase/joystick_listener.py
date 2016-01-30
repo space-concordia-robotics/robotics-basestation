@@ -73,13 +73,16 @@ def joystick_listener(client_process, events, joystick):
             print "forward right %d" % x
             client_process.send_command(ROBOTICSNET_COMMAND_FORWARDRIGHT, x/2)
 
+
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
             client_process.send_command(ROBOTICSNET_COMMAND_REVERSELEFT, -x/2)
 
+
         elif x > 20 and y < 0:
             print "reversing right %d" % x
             client_process.send_command(ROBOTICSNET_COMMAND_REVERSERIGHT, x/2)
+
 
         elif y > (10):
             print "forward %d" % y
@@ -92,7 +95,6 @@ def joystick_listener(client_process, events, joystick):
         else:
             print "stop"
             client_process.send_command(ROBOTICSNET_COMMAND_STOP)
-
         # Save joystick value
         last = (x,y)
 

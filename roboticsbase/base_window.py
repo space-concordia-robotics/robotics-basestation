@@ -22,11 +22,11 @@ class BaseWindow:
         self.client = ClientProcess("localhost", 10666, 10667)
         self.isconnected = False
 
+        #logger
+        logging.basicConfig(filename='basestation.log',level=logging.DEBUG)
 
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
-        self.lock = multiprocessing.Lock()
-
 
         ############################
         # Video Box
@@ -36,7 +36,7 @@ class BaseWindow:
 
         self.img = gtk.Image()
         self.img2 = gtk.Image()
-        temp_img = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
+
         self.img.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img2.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
         self.img.show()
@@ -51,10 +51,11 @@ class BaseWindow:
         ############################
 
         self.image_box = gtk.Fixed()
-
+        directory = os.path.dirname("TestMap.jpg")
+        path = os.path.abspath(os.path.dirname(__file__))
+        temp_image = gtk.gdk.pixbuf_new_from_file(os.path.join(path,"TestMap.jpg"))
         # Rescaling image
         image_test = gtk.Image()
-        temp_image = gtk.gdk.pixbuf_new_from_file("TestMap.jpg")
         scaled_image = temp_image.scale_simple(400, 300, gtk.gdk.INTERP_BILINEAR)
         image_test.set_from_pixbuf(scaled_image)
 
@@ -94,11 +95,6 @@ class BaseWindow:
         self.widget_box.attach(self.btn_video_stop, 1, 2, 1, 2)
         self.widget_box.attach(self.btn_video_show, 2, 3, 0, 1)
 
-        # self.button1.set_size_request(100,30)
-        # self.button2.set_size_request(100,30)
-        # self.button3.set_size_request(100,30)
-        # self.button4.set_size_request(100,30)
-
         # Movement
         self.btn_snapshot = gtk.Button("Snapshot")
         self.btn_snapshot.connect("clicked", self.snapshot)
@@ -111,10 +107,10 @@ class BaseWindow:
 
         self.ip_box = gtk.Entry(max=15)
         self.port_box = gtk.Entry(max=5)
-        self.option_box = gtk.Entry(max=13)
-        self.ip_box.set_text("IP")
-        self.port_box.set_text("Port")
-        self.option_box.set_text("Connect to...")
+        self.option_box = gtk.Entry(max=25)
+        self.ip_box.set_text("192.168.1.201")
+        self.port_box.set_text("5000")
+        self.option_box.set_text("Connect to server")
 
         self.widget_box.attach(self.btn_snapshot, 3, 4, 0, 1)
         self.widget_box.attach(self.btn_panoramic, 3, 4, 1, 2)
@@ -127,7 +123,6 @@ class BaseWindow:
         #exit button
         self.btn_exit = gtk.Button(stock=gtk.STOCK_QUIT)
         self.btn_exit.connect("clicked", self.destroy)
-        # self.exit_button.set_size_request(100,30)
 
         self.widget_box.attach(self.btn_exit, 4, 5, 1, 2)
 
@@ -137,14 +132,12 @@ class BaseWindow:
         # Status Box
         ###########################
 
-        self.status_box = gtk.VBox(False, 0)
+        self.status_box = gtk.HBox(False, 0)
         self.text1 = gtk.TextView()
         self.text1.set_editable(False)
-        self.text1.set_size_request(100,30)
 
         self.text1_buffer = self.text1.get_buffer()
         self.text1_buffer.set_text("Testing!!!!!")
-
 
         self.status_box.pack_start(self.text1)
 
@@ -162,7 +155,6 @@ class BaseWindow:
         # Initialize window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.connect("destroy", gtk.main_quit)
-        #self.window.set_default_size(1500, 2000)
         self.window.set_size_request(1200, 700)
 
         self.window.set_resizable(True)
@@ -173,15 +165,15 @@ class BaseWindow:
         self.main_box = gtk.VBox()
         self.main_box.show()
 
-        self.top_container = gtk.Table(2,3)
-        self.top_container.attach(self.image_box, 0, 1, 1, 2)
-        self.top_container.attach(self.video_box, 0, 2, 0, 1)
-        self.top_container.attach(self.status_box, 1, 2, 1, 2)
-        self.top_container.attach(self.entry_box, 1, 2, 2, 3)
+        self.top_container = gtk.Table(3,6)
+        self.top_container.attach(self.image_box, 0, 1, 4, 5)
+        self.top_container.attach(self.video_box, 0, 3, 0, 4)
+        self.top_container.attach(self.status_box, 1, 2, 4, 5)
+        self.top_container.attach(self.entry_box, 2, 3, 4, 5)
+        self.top_container.attach(self.widget_box, 0, 4, 5, 6)
 
 
         self.main_box.pack_start(self.top_container)
-        self.main_box.pack_start(self.widget_box)
 
         self.window.add(self.main_box)
         self.window.show_all()
@@ -209,7 +201,7 @@ class BaseWindow:
         md.set_title("Quit the program?")
 
         response = md.run()
-
+        logging.info("closing base window")
         if response == gtk.RESPONSE_YES:
             md.destroy()
             self.destroy(self, widget)
@@ -219,19 +211,22 @@ class BaseWindow:
             return True
 
     def destroy(self, widget, data=None):
+        self.client.kill_client_process()
         gtk.main_quit()
 
     def start_video(self, event):
         try:
-            self.sendcommand(ROBOTICSNET_CAMERA_START_VID)
+            self.sendcommand(ROBOTICSNET_COMMAND_START_VID)
+            logging.info("starting video stream")
         except:
-            print "cannot start video"
+            logging.error("cannot start video")
             traceback.print_exc(file=sys.stdout)
 
 
     def stop_video(self, event):
         try:
-            self.sendcommand(ROBOTICSNET_CAMERA_STOP_VID)
+            self.sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
+            logging.info("stopping video stream")
         except:
             print "cannot stop video"
 
@@ -241,14 +236,16 @@ class BaseWindow:
             self.t2 = VideoThread(self.img2,self.ip_box.get_text(),self.port_box.get_text())
             self.t2.start()
             self.t.start()
+            logging.info("displaying video")
         except:
-            print "no video stream"
-            traceback.print_exc(file=sys.stdout)
+            logging.error("cannot find stream")
+            logging.error(sys.exc_info()[0])
 
     def quit_video(self, event):
         try:
             self.t.quit = True
             self.t2.quit = True
+            logging.info("stopping video display")
         except:
             print "no video stream to quit"
 
@@ -256,37 +253,47 @@ class BaseWindow:
     def stop_joystick(self, event):
         try:
             events[ROBOTICSBASE_STOP_LISTENER].set()
+            logging.info("stopping joystick listener")
         except:
-            print "cannot stop joystick thread"
+            logging.error("cannot stop joystick thread. probably doesn't exist")
 
     def start_joystick(self, event):
         try:
-            spawn_joystick_thread(self.client, e)
+            spawn_joystick_process('localhost', ROBOTICSNET_UDP_PORT, e)
+            logging.info("starting joystick listener")
         except:
-            print "no joystick connected"
+            logging.error("cannot start joystick listener. It's almost definitely because there isn't one connected")
 
     def print_text(self, text):
         pass
 
     def snapshot(self, event):
+        logging.info("Taking a snapshot")
         pass
 
     def panoramic(self, event):
+        logging.info("Taking a panoramic")
         pass
 
     def sendcommand(self, command):
-        self.client.send_command(command, 0)
+        command_process = multiprocessing.Process(target = send_locked_command, args=(self.client, self.lock, command, 0))
+        command_process.start()
 
-    def connect(self):
-        if "server" in option_box.get_text().lower():
+    def connect(self, event):
+
+        if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()))
-        elif "1" in option_box.get_text().lower():
-            pass
-        elif "2" in option_box.get_text().lower():
+            logging.info("Basestation trying to connect to server")
+        elif "1" in self.option_box.get_text().lower():
+            logging.info("Basestation trying to connect to first video stream")
+
+
+        elif "2" in self.option_box.get_text().lower():
+            logging.info("basestation connecting to video stream 2")
             pass
         else:
-            option_box.set_text("Invalid option")
+            self.option_box.set_text("Invalid option")
 
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
