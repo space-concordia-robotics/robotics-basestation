@@ -8,6 +8,7 @@ import gobject
 import threading
 import multiprocessing
 
+from roboticslogger.logger import Logger
 from roboticsnet.gateway_constants import *
 from common_constants import *
 from mjpg import VideoThread
@@ -22,8 +23,11 @@ class BaseWindow:
         self.client = ClientProcess("localhost", 10666, 10667)
         self.isconnected = False
 
-        #logger
-        logging.basicConfig(filename='basestation.log',level=logging.DEBUG)
+        # Logger
+        self.logger = Logger()
+        self.logger_parent_conn, self.logger_child_conn = multiprocessing.Pipe()
+        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, )
+        self.p.start()
 
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
@@ -201,7 +205,7 @@ class BaseWindow:
         md.set_title("Quit the program?")
 
         response = md.run()
-        logging.info("closing base window")
+        self.logger_parent_conn.send(["info", "closing base window")
         if response == gtk.RESPONSE_YES:
             md.destroy()
             self.destroy(self, widget)
@@ -217,16 +221,16 @@ class BaseWindow:
     def start_video(self, event):
         try:
             self.sendcommand(ROBOTICSNET_COMMAND_START_VID)
-            logging.info("starting video stream")
+            self.logger_parent_conn.send(["info", "starting video stream"])
         except:
-            logging.error("cannot start video")
+            self.logger_parent_conn.send(["err", "cannot start video"])
             traceback.print_exc(file=sys.stdout)
 
 
     def stop_video(self, event):
         try:
             self.sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
-            logging.info("stopping video stream")
+            self.logger_parent_conn.send(["info", "stopping video stream"])
         except:
             print "cannot stop video"
 
@@ -236,16 +240,16 @@ class BaseWindow:
             self.t2 = VideoThread(self.img2,self.ip_box.get_text(),self.port_box.get_text())
             self.t2.start()
             self.t.start()
-            logging.info("displaying video")
+            self.logger_parent_conn.send(["info", "displaying video"])
         except:
-            logging.error("cannot find stream")
-            logging.error(sys.exc_info()[0])
+            self.logger_parent_conn.send(["err", "cannot find stream"])
+            self.logger_parent_conn.send(["err", sys.exc_info()[0]])
 
     def quit_video(self, event):
         try:
             self.t.quit = True
             self.t2.quit = True
-            logging.info("stopping video display")
+            self.logger_parent_conn.send(["info", "stopping video display"])
         except:
             print "no video stream to quit"
 
@@ -253,44 +257,43 @@ class BaseWindow:
     def stop_joystick(self, event):
         try:
             events[ROBOTICSBASE_STOP_LISTENER].set()
-            logging.info("stopping joystick listener")
+            self.logger_parent_conn.send(["info", "stopping joystick listener"])
         except:
-            logging.error("cannot stop joystick thread. probably doesn't exist")
+            self.logger_parent_conn.send(["err", "cannot stop joystick thread. probably doesn't exist"])
 
     def start_joystick(self, event):
         try:
             spawn_joystick_process('localhost', ROBOTICSNET_UDP_PORT, e)
-            logging.info("starting joystick listener")
+            self.logger_parent_conn.send(["info", "starting joystick listener"])
         except:
-            logging.error("cannot start joystick listener. It's almost definitely because there isn't one connected")
+            self.logger_parent_conn.send(["err", "cannot start joystick listener. It's almost definitely because there isn't one connected"])
 
     def print_text(self, text):
         pass
 
     def snapshot(self, event):
-        logging.info("Taking a snapshot")
+        self.logger_parent_conn.send(["info", "Taking a snapshot"])
         pass
 
     def panoramic(self, event):
-        logging.info("Taking a panoramic")
+        self.logger_parent_conn.send(["info", "Taking a panoramic"])
         pass
 
     def sendcommand(self, command):
-        command_process = multiprocessing.Process(target = send_locked_command, args=(self.client, self.lock, command, 0))
-        command_process.start()
+        self.client.send(command)
 
     def connect(self, event):
 
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()))
-            logging.info("Basestation trying to connect to server")
+            self.logger_parent_conn.send(["info", "Basestation trying to connect to server"])
         elif "1" in self.option_box.get_text().lower():
-            logging.info("Basestation trying to connect to first video stream")
+            self.logger_parent_conn.send(["info", "Basestation trying to connect to first video stream"])
 
 
         elif "2" in self.option_box.get_text().lower():
-            logging.info("basestation connecting to video stream 2")
+            self.logger_parent_conn.send(["info", "basestation connecting to video stream 2"])
             pass
         else:
             self.option_box.set_text("Invalid option")
