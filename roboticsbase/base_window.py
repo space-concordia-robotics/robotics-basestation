@@ -1,9 +1,5 @@
-from common_constants import *
 import threading
 import sys, traceback
-
-from roboticsnet.gateway_constants import ROBOTICSNET_PORT
-from mjpg import VideoThread
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -11,20 +7,19 @@ import urllib
 import gobject
 import threading
 import multiprocessing
+
 from roboticsnet.gateway_constants import *
+from common_constants import *
+from mjpg import VideoThread
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from roboticsnet.client.rover_client import RoverClient
 from clientproc import ClientProcess
-
 from joystick_listener import spawn_joystick_process
-
-
 
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
         self.lock = multiprocessing.Lock()
-        self.client = ClientProcess("localhost", 10666)
+        self.client = ClientProcess("localhost", 10666, 10667)
         self.isconnected = False
 
 

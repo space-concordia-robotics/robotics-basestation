@@ -3,7 +3,7 @@ import time
 import multiprocessing
 
 from input_exception import InputException
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 
 from pygame.locals import *
 from common_constants import *

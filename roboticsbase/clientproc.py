@@ -1,6 +1,6 @@
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from roboticsnet.client.rover_client import RoverClient
+from roboticsnet.rover_client import RoverClient
 from multiprocessing import Process, Pipe
 
 class ClientProcess():
@@ -18,7 +18,8 @@ class ClientProcess():
 
     author: msnidal
     """
-    def __init__(self, host, port):
+
+    def __init__(self, host, tcp_port, udp_port):
         """
         Initializes a rover client process on host:port
         """
@@ -26,7 +27,7 @@ class ClientProcess():
         self.kill_flag = False
         self.state_alive = True
         self.parent_conn, child_conn = Pipe()
-        self.process = Process(target=self.client_proc, args=(host, port, child_conn))
+        self.process = Process(target=self.client_proc, args=(host, tcp_port, udp_port, child_conn))
         self.process.start()
 
     def __del__(self):
@@ -58,13 +59,13 @@ class ClientProcess():
             print "Client process dead."
 
 
-    def set_port(self, port):
+    def set_port(self, port, is_tcp):
         """
         Change the destination port
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port])
+            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port, is_tcp])
         else:
             print "Client process dead."
 
@@ -79,15 +80,15 @@ class ClientProcess():
         else:
             print "Client process dead."
 
-    def client_proc(self, client_host, client_port, conn):
+    def client_proc(self, client_host, client_tcp_port, client_udp_port, conn):
         """
         Client process logic loop
         """
 
         # try init rover client
         try:
-            print "Initializing client on {0}:{1}".format(client_host, client_port)
-            client = RoverClient(host=client_host, port=client_port)
+            print "Initializing client on {0}:{1}/{2}".format(client_host, client_tcp_port, client_udp_port)
+            client = RoverClient(host = client_host, tcp_port = client_tcp_port, udp_port = client_udp_port)
         except Exception as e:
             print "Error initializing rover client!"
             print e.message
@@ -122,7 +123,7 @@ class ClientProcess():
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stopvid']):
                     client.stopVideo()
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
-                    client.setPort(msg[1])
+                    client.setPort(msg[1], msg[2])
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
                     client.setHost(msg[1])
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
@@ -137,5 +138,5 @@ class ClientProcess():
                 print "Exception in station client process! Waiting for next command."
                 print e.message
 
-        print "Client process on {0}:{1} terminated.".format(client_host, client_port)
+        print "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)
         self.state_alive = False
