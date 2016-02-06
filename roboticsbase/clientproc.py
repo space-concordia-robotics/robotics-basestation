@@ -42,7 +42,7 @@ class ClientProcess():
         """
         Send a command to the client process
         """
-
+        print "hello"
         if (self.state_alive):
             self.parent_conn.send([command, value])
         else:
@@ -59,7 +59,7 @@ class ClientProcess():
             print "Client process dead."
 
 
-    def set_port(self, port, is_tcp):
+    def set_port(self, port, is_tcp = True):
         """
         Change the destination port
         """
@@ -99,35 +99,35 @@ class ClientProcess():
             try:
                 msg = conn.recv()
                 print "Sending {0}...".format(msg)
-                if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
-                    client.graceful()
-                    self.kill_flag = True
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['forward']):
-                    client.forward(msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['reverse']):
-                    client.reverse(msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['forwardLeft']):
-                    client.forwardLeft(msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['forwardRight']):
-                    client.forwardRight(msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['reverseLeft']):
-                    client.reverseLeft(msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['reverseRight']):
-                    client.reverseRight(msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stop']):
-                    client.stop()
+
+                if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
+                    client.ping()
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['queryproc']):
                     client.query()
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['startvid']):
-                    client.startVideo()
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stopvid']):
-                    client.stopVideo()
+                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
+                    client.sensInfo()
+
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
                     client.setPort(msg[1], msg[2])
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
                     client.setHost(msg[1])
+
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
                     self.kill_flag = True
+                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
+                    client.sendCommand(msg[0])
+                    self.kill_flag = True
+
+                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stop']):
+                    client.timedCommand(msg[0])
+                elif (ROBOTICSNET_STRCMD_LOOKUP['forward'] or ROBOTICSNET_STRCMD_LOOKUP['reverse'] or
+                    ROBOTICSNET_STRCMD_LOOKUP['forwardLeft'] or ROBOTICSNET_STRCMD_LOOKUP['forwardRight'] or
+                    ROBOTICSNET_STRCMD_LOOKUP['reverseLeft'] or ROBOTICSNET_STRCMD_LOOKUP['reverseRight']):
+                    client.timedCommand(msg[0], msg[1])
+                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['startvid'] or ROBOTICSNET_STRCMD_LOOKUP['stopvid'] or
+                    ROBOTICSNET_STRCMD_LOOKUP['snapshot'] or ROBOTICSNET_STRCMD_LOOKUP['panoramicsnapshot']):
+                    client.sendCommand(msg[0])
+
                 else:
                     raise Exception('Message type {0} not matched to a client message. Check clientproc.py').format(msg[0])
 
@@ -140,3 +140,20 @@ class ClientProcess():
 
         print "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)
         self.state_alive = False
+
+def main():
+    """
+    Test method that creates a clientproc and tries to send a value
+    """
+    host = raw_input("Enter host: ")
+    port =  int(raw_input("Enter port: "))
+
+    com = int(raw_input("Enter command: "))
+    val = int(raw_input("Enter value: "))
+
+    client_process = ClientProcess(host, port, port+1)
+    client_process.send_command(com, val)
+    client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['graceful'])
+
+if __name__ == "__main__":\
+    main()

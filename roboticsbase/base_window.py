@@ -7,6 +7,7 @@ import urllib
 import gobject
 import threading
 import multiprocessing
+import os
 
 from roboticslogger.logger import Logger
 from roboticsnet.gateway_constants import *
@@ -19,14 +20,13 @@ from joystick_listener import spawn_joystick_process
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
-        self.lock = multiprocessing.Lock()
         self.client = ClientProcess("localhost", 10666, 10667)
         self.isconnected = False
 
         # Logger
         self.logger = Logger()
         self.logger_parent_conn, self.logger_child_conn = multiprocessing.Pipe()
-        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, )
+        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, ))
         self.p.start()
 
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
@@ -194,7 +194,6 @@ class BaseWindow:
 
         gtk.main()
 
-
     def delete_event(self, widget, event, data=None):
         msg = "Are you sure you want to quit?"
         md = gtk.MessageDialog(self.app_window,
@@ -205,7 +204,7 @@ class BaseWindow:
         md.set_title("Quit the program?")
 
         response = md.run()
-        self.logger_parent_conn.send(["info", "closing base window")
+        self.logger_parent_conn.send(["info", "closing base window"])
         if response == gtk.RESPONSE_YES:
             md.destroy()
             self.destroy(self, widget)
@@ -216,11 +215,12 @@ class BaseWindow:
 
     def destroy(self, widget, data=None):
         self.client.kill_client_process()
+        self.logger_parent_conn.send(["done"])
         gtk.main_quit()
 
     def start_video(self, event):
         try:
-            self.sendcommand(ROBOTICSNET_COMMAND_START_VID)
+            self.send_command(ROBOTICSNET_COMMAND_START_VID)
             self.logger_parent_conn.send(["info", "starting video stream"])
         except:
             self.logger_parent_conn.send(["err", "cannot start video"])
@@ -229,7 +229,7 @@ class BaseWindow:
 
     def stop_video(self, event):
         try:
-            self.sendcommand(ROBOTICSNET_COMMAND_STOP_VID)
+            self.send_command(ROBOTICSNET_COMMAND_STOP_VID)
             self.logger_parent_conn.send(["info", "stopping video stream"])
         except:
             print "cannot stop video"
@@ -280,13 +280,13 @@ class BaseWindow:
         pass
 
     def sendcommand(self, command):
-        self.client.send(command)
+        self.client.send_command(command)
 
     def connect(self, event):
 
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
-            self.client.set_port(int(self.port_box.get_text()))
+            self.client.set_port(int(self.port_box.get_text()), True)
             self.logger_parent_conn.send(["info", "Basestation trying to connect to server"])
         elif "1" in self.option_box.get_text().lower():
             self.logger_parent_conn.send(["info", "Basestation trying to connect to first video stream"])
