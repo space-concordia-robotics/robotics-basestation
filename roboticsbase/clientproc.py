@@ -32,17 +32,15 @@ class ClientProcess():
 
     def __del__(self):
         """
-        Destroys the client process
+        Kills the client process
         """
 
         kill_client_process()
-        self.process.join()
 
     def send_command(self, command, value = None):
         """
         Send a command to the client process
         """
-        print "hello"
         if (self.state_alive):
             self.parent_conn.send([command, value])
         else:
@@ -77,6 +75,7 @@ class ClientProcess():
 
         if (self.state_alive):
             self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
+            self.process.join()
         else:
             print "Client process dead."
 
@@ -100,24 +99,28 @@ class ClientProcess():
                 msg = conn.recv()
                 print "Sending {0}...".format(msg)
 
+                # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
-                    client.ping()
+                    print client.ping()
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['queryproc']):
-                    client.query()
+                    print client.query()
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
-                    client.sensInfo()
+                    print client.sensInfo()
 
+                # Utility commands for the local client
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
                     client.setPort(msg[1], msg[2])
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
                     client.setHost(msg[1])
 
+                # Commands to kill the client and/or the server
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
                     self.kill_flag = True
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
                     client.sendCommand(msg[0])
                     self.kill_flag = True
 
+                # Generic commands (timed & untimed)
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stop']):
                     client.timedCommand(msg[0])
                 elif (ROBOTICSNET_STRCMD_LOOKUP['forward'] or ROBOTICSNET_STRCMD_LOOKUP['reverse'] or
@@ -153,7 +156,7 @@ def main():
 
     client_process = ClientProcess(host, port, port+1)
     client_process.send_command(com, val)
-    client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['graceful'])
+    client_process.kill_client_process()
 
 if __name__ == "__main__":\
     main()

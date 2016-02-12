@@ -20,6 +20,7 @@ from joystick_listener import spawn_joystick_process
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
+        self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
         self.client = ClientProcess("localhost", 10666, 10667)
         self.isconnected = False
 
@@ -256,14 +257,14 @@ class BaseWindow:
 
     def stop_joystick(self, event):
         try:
-            events[ROBOTICSBASE_STOP_LISTENER].set()
+            self.e[ROBOTICSBASE_STOP_LISTENER].set()
             self.logger_parent_conn.send(["info", "stopping joystick listener"])
         except:
             self.logger_parent_conn.send(["err", "cannot stop joystick thread. probably doesn't exist"])
 
     def start_joystick(self, event):
         try:
-            spawn_joystick_process('localhost', ROBOTICSNET_UDP_PORT, e)
+            spawn_joystick_process(self.client, self.e)
             self.logger_parent_conn.send(["info", "starting joystick listener"])
         except:
             self.logger_parent_conn.send(["err", "cannot start joystick listener. It's almost definitely because there isn't one connected"])
@@ -301,7 +302,6 @@ class BaseWindow:
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
         # furthermore, events in e can be used in the window to trigger events
-        e = [threading.Event() for i in range(NUM_BUTTON_EVENTS)]
         gtk.main()
 
 

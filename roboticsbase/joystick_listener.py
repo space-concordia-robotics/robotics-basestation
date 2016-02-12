@@ -101,6 +101,10 @@ def joystick_listener(client_process, events, joystick):
     # send one final stop command. Reset controller stop event
     client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['stop'])
 
+    pygame.quit()
+    print "Joystick thread killed."
+
+
 def spawn_joystick_process(client_process, events):
     """
     Spawns a joystick input process, which gets input from controller and sends it to the rover.
@@ -118,17 +122,10 @@ def spawn_joystick_process(client_process, events):
         joystick_process = multiprocessing.Process(target=joystick_listener, args=(client_process, events, joystick))
         joystick_process.start()
 
-        # Wait for process to finish, then deinit pygame
-        joystick_process.join()
-
     except InputException as e:
         print "Input error!"
         print e.message
-
-    pygame.quit()
-
-    #client_process.kill_client_process()
-    print "Movement process aborted."
+        raise
 
 def main():
     """
@@ -139,7 +136,11 @@ def main():
     events = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
     lock = multiprocessing.Lock()
     client_process = ClientProcess(host, port, port+1)
-    spawn_joystick_process(client_process, events)
+
+    try:
+        spawn_joystick_process(client_process, events)
+    except Exception as e:
+        client_process.kill_client_process()
 
 if __name__ == "__main__":\
     main()
