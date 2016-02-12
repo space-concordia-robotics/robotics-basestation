@@ -20,15 +20,15 @@ from joystick_listener import spawn_joystick_process
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
-        self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
-        self.client = ClientProcess("localhost", 10666, 10667)
-        self.isconnected = False
-
         # Logger
         self.logger = Logger()
         self.logger_parent_conn, self.logger_child_conn = multiprocessing.Pipe()
         self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, ))
         self.p.start()
+
+        self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
+        self.client = ClientProcess("localhost", 10666, 10667, self.logger_parent_conn)
+        self.isconnected = False
 
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
