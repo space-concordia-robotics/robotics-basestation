@@ -1,6 +1,7 @@
 from roboticsnet.gateway_constants import *
 from roboticsnet.roboticsnet_exception import RoboticsnetException
 from roboticsnet.rover_client import RoverClient
+from roboticslogger.logger import Logger
 from multiprocessing import Process, Pipe
 
 class ClientProcess():
@@ -19,13 +20,14 @@ class ClientProcess():
     author: msnidal
     """
 
-    def __init__(self, host, tcp_port, udp_port):
+    def __init__(self, host, tcp_port, udp_port, logger_conn):
         """
         Initializes a rover client process on host:port
         """
 
         self.kill_flag = False
         self.state_alive = True
+        self.logger_conn = logger_conn
         self.parent_conn, child_conn = Pipe()
         self.process = Process(target=self.client_proc, args=(host, tcp_port, udp_port, child_conn))
         self.process.start()
@@ -44,7 +46,7 @@ class ClientProcess():
         if (self.state_alive):
             self.parent_conn.send([command, value])
         else:
-            print "Client process dead."
+            self.logger_conn.send(["err", "Client process dead."])
 
     def set_host(self, host):
         """
@@ -54,7 +56,7 @@ class ClientProcess():
         if (self.state_alive):
             self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['sethost'], host])
         else:
-            print "Client process dead."
+            self.logger_conn.send(["err", "Client process dead."])
 
 
     def set_port(self, port, is_tcp = True):
@@ -65,7 +67,7 @@ class ClientProcess():
         if (self.state_alive):
             self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port, is_tcp])
         else:
-            print "Client process dead."
+            self.logger_conn.send(["err", "Client process dead."])
 
 
     def kill_client_process(self):
@@ -77,7 +79,7 @@ class ClientProcess():
             self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
             self.process.join()
         else:
-            print "Client process dead."
+            self.logger_conn.send(["err", "Client process dead."])
 
     def client_proc(self, client_host, client_tcp_port, client_udp_port, conn):
         """
@@ -86,18 +88,16 @@ class ClientProcess():
 
         # try init rover client
         try:
-            print "Initializing client on {0}:{1}/{2}".format(client_host, client_tcp_port, client_udp_port)
+            self.logger_conn.send(["info", "Initializing client on {0}:{1}/{2}".format(client_host, client_tcp_port, client_udp_port)])
             client = RoverClient(host = client_host, tcp_port = client_tcp_port, udp_port = client_udp_port)
         except Exception as e:
-            print "Error initializing rover client!"
-            print e.message
+            self.logger_conn.send(["err", "Error initializing rover client! {0}".format(e.message)])
             self.kill_flag = True
 
         # main loop
         while not self.kill_flag:
             try:
                 msg = conn.recv()
-                print "Sending {0}...".format(msg)
 
                 # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
@@ -134,14 +134,13 @@ class ClientProcess():
                 else:
                     raise Exception('Message type {0} not matched to a client message. Check clientproc.py').format(msg[0])
 
-                print "{0} sent!".format(msg)
+                self.logger_conn.send(["info", "Sent {0}".format(msg)])
 
             except Exception as e:
                 # put weak connection behaviour here! this means that the station connection is very weak
-                print "Exception in station client process! Waiting for next command."
-                print e.message
+                self.logger_conn.send(["err", "Exception in station client process:\n{0}\nWaiting for next command.".format(e.message)])
 
-        print "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)
+        self.logger_conn.send(["info", "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)])
         self.state_alive = False
 
 def main():
@@ -154,9 +153,18 @@ def main():
     com = int(raw_input("Enter command: "))
     val = int(raw_input("Enter value: "))
 
-    client_process = ClientProcess(host, port, port+1)
+    logger = Logger()
+    parent_conn, child_conn = Pipe()
+    p = Process(target=logger.run, args=(child_conn,))
+    p.start()
+
+
+    client_process = ClientProcess(host, port, port+1, parent_conn)
     client_process.send_command(com, val)
+
     client_process.kill_client_process()
+
+    parent_conn.send(["done"])
 
 if __name__ == "__main__":\
     main()
