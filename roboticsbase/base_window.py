@@ -22,12 +22,12 @@ class BaseWindow:
     def __init__(self):
         # Logger
         self.logger = Logger()
-        self.logger_parent_conn, self.logger_child_conn = multiprocessing.Pipe()
-        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, ))
+        self.logger_parent, self.logger_child = multiprocessing.Pipe()
+        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child, ))
         self.p.start()
 
         self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
-        self.client = ClientProcess("localhost", 10666, 10667, self.logger_parent_conn)
+        self.client = ClientProcess("localhost", 10666, 10667, self.logger_parent)
         self.isconnected = False
 
         #this isn't necessary for gobject v~3+. not sure what the version being used is.
@@ -36,6 +36,11 @@ class BaseWindow:
         ############################
         # Video Box
         ############################
+        
+        self.vidip1 = "localhost"
+        self.vidport1 = 5000
+        self.vidip2 = "localhost"
+        self.vidport2 = 5000
 
         self.video_box = gtk.HBox(False,0)
 
@@ -110,6 +115,21 @@ class BaseWindow:
         self.btn_quit_video = gtk.Button("Stop Video Thread")
         self.btn_quit_video.connect("clicked",self.quit_video)
 
+
+        #Displays
+        
+        self.message = gtk.Label()
+        self.message.set_text("No messages")
+        #sensors
+        self.temperature = gtk.Label()
+        self.temperature.set_text("Temperature:20C")
+        self.speed = gtk.Label()
+        self.speed.set_text("0m/s")
+        self.voltage = gtk.Label()
+        self.voltage.set_text("0V")
+        
+        
+        #entry boxes
         self.ip_box = gtk.Entry(max=15)
         self.port_box = gtk.Entry(max=5)
         self.option_box = gtk.Entry(max=25)
@@ -145,8 +165,17 @@ class BaseWindow:
         self.text1_buffer.set_text("Testing!!!!!")
 
         self.status_box.pack_start(self.text1)
+        
+        
+        ###########################
+        # Entry Box
+        ###########################
 
         self.entry_box = gtk.VBox(False,0)
+        self.entry_box.pack_start(self.message)
+        self.entry_box.pack_start(self.temperature)
+        self.entry_box.pack_start(self.speed)
+        self.entry_box.pack_start(self.voltage)
         self.entry_box.pack_start(self.ip_box)
         self.entry_box.pack_start(self.port_box)
         self.entry_box.pack_start(self.option_box)
@@ -205,7 +234,7 @@ class BaseWindow:
         md.set_title("Quit the program?")
 
         response = md.run()
-        self.logger_parent_conn.send(["info", "closing base window"])
+        self.logger_parent.send(["info", "closing base window"])
         if response == gtk.RESPONSE_YES:
             md.destroy()
             self.destroy(self, widget)
@@ -216,88 +245,95 @@ class BaseWindow:
 
     def destroy(self, widget, data=None):
         self.client.kill_client_process()
-        self.logger_parent_conn.send(["done"])
+        self.logger_parent.send(["done"])
         gtk.main_quit()
 
     def start_video(self, event):
         try:
             self.send_command(ROBOTICSNET_COMMAND_START_VID)
-            self.logger_parent_conn.send(["info", "starting video stream"])
+            self.message.set_text("starting video stream")
         except:
-            self.logger_parent_conn.send(["err", "cannot start video"])
-            traceback.print_exc(file=sys.stdout)
+            self.message.set_text("cannot start video stream")
+            self.logger_parent.send(["err", sys.exc_info()[0]])
 
 
     def stop_video(self, event):
         try:
             self.send_command(ROBOTICSNET_COMMAND_STOP_VID)
-            self.logger_parent_conn.send(["info", "stopping video stream"])
+            self.message.set_text("stopping video stream")
         except:
-            print "cannot stop video"
+            self.message.set_text("cannot stop video")
+            self.logger_parent.send(["err", sys.exc_info()[0]])
 
     def show_video(self, event):
         try:
-            self.t = VideoThread(self.img,self.ip_box.get_text(),self.port_box.get_text())
-            self.t2 = VideoThread(self.img2,self.ip_box.get_text(),self.port_box.get_text())
+            self.t = VideoThread(self.img,self.vidip1,self.vidport1)
+            self.t2 = VideoThread(self.img2,self.vidip2,self.vidport2)
             self.t2.start()
             self.t.start()
-            self.logger_parent_conn.send(["info", "displaying video"])
+            self.message.set_text("Displaying video")
         except:
-            self.logger_parent_conn.send(["err", "cannot find stream"])
-            self.logger_parent_conn.send(["err", sys.exc_info()[0]])
+            self.message.set_text("Cannot find stream")
+            self.logger_parent.send(["err", sys.exc_info()[0]])
 
     def quit_video(self, event):
         try:
             self.t.quit = True
             self.t2.quit = True
-            self.logger_parent_conn.send(["info", "stopping video display"])
+            self.message.set_text("Stopped video display")
         except:
-            print "no video stream to quit"
+            self.message.set_text("Can't stop video display")
 
 
     def stop_joystick(self, event):
         try:
             self.e[ROBOTICSBASE_STOP_LISTENER].set()
-            self.logger_parent_conn.send(["info", "stopping joystick listener"])
+            self.message.set_text("Stopped joystick listener")
         except:
-            self.logger_parent_conn.send(["err", "cannot stop joystick thread. probably doesn't exist"])
+            self.message.set_text("Cannot stop joystick listener.")
 
     def start_joystick(self, event):
         try:
             spawn_joystick_process(self.client, self.e)
-            self.logger_parent_conn.send(["info", "starting joystick listener"])
+            self.message.set_text("Started joystick listener")
         except:
-            self.logger_parent_conn.send(["err", "cannot start joystick listener. It's almost definitely because there isn't one connected"])
+            self.message.set_text("Cannot start joystick listener. Is it connected?")
+            self.logger_parent.send(["err", sys.exc_info()[0]])
 
     def print_text(self, text):
-        pass
+        #right now this replaces the text in the textbox, but it should append.
+        self.text1_buffer.set_text(text)
 
     def snapshot(self, event):
-        self.logger_parent_conn.send(["info", "Taking a snapshot"])
-        pass
+        self.message.set_text("Taking a snapshot")
 
     def panoramic(self, event):
-        self.logger_parent_conn.send(["info", "Taking a panoramic"])
-        pass
+        self.message.set_text("Taking a panoramic")
 
     def sendcommand(self, command):
-        self.client.send_command(command)
+        try:
+            self.client.send_command(command)
+            self.message.set_text("sent %d"%(command))
+        except:
+            self.message.set_text("could not send %d"%(command))
+            self.logger_parent.send(["err", sys.exc_info()[0]])
 
     def connect(self, event):
 
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()), True)
-            self.logger_parent_conn.send(["info", "Basestation trying to connect to server"])
+            self.message.set_text("Trying to connect to server at %s:%s"%(self.ip_box.get_text(),self.port_box.get_text()))
         elif "1" in self.option_box.get_text().lower():
-            self.logger_parent_conn.send(["info", "Basestation trying to connect to first video stream"])
-
-
+            self.vidip1 = self.ip_box.get_text()
+            self.vidport1 = self.port_box.get_text()
+            self.message.set_text("Connecting to first video stream")
         elif "2" in self.option_box.get_text().lower():
-            self.logger_parent_conn.send(["info", "basestation connecting to video stream 2"])
-            pass
+            self.vidip2 = self.ip_box.get_text()
+            self.vidport2 = self.port_box.get_text()
+            self.message.set_text("Connecting to second video stream")
         else:
-            self.option_box.set_text("Invalid option")
+            self.message.set_text("Invalid option")
 
     def main(self):
         # spawning joystick thread here for now. This functionality could be tied to a button/further integrated with the window
