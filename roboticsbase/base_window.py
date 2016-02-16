@@ -34,33 +34,33 @@ class BaseWindow:
         gobject.threads_init()
 
         ############################
-        # Video Box
+        # Video/Image Box
         ############################
         
-        self.vidip1 = "localhost"
-        self.vidport1 = 5000
-        self.vidip2 = "localhost"
-        self.vidport2 = 5000
+        self.video_ip = "localhost"
+        self.video_port = 5000
 
-        self.video_box = gtk.HBox(False,0)
+        self.display_box = gtk.HBox(False,0)
 
-        self.img = gtk.Image()
-        self.img2 = gtk.Image()
+        #for displaying the video stream
+        self.video_box = gtk.Image()
+        #for displaying snapshots
+        self.image_box = gtk.Image()
 
-        self.img.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
-        self.img2.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
-        self.img.show()
-        self.img2.show()
+        self.video_box.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
+        self.image_box.set_from_stock(gtk.STOCK_MISSING_IMAGE,gtk.ICON_SIZE_DIALOG)
+        self.video_box.show()
+        self.image_box.show()
 
 
-        self.video_box.pack_start(self.img)
-        self.video_box.pack_start(self.img2)
+        self.display_box.pack_start(self.video_box)
+        self.display_box.pack_start(self.image_box)
 
         ############################
-        # Image Box
+        # Map Box
         ############################
 
-        self.image_box = gtk.Fixed()
+        self.map_box = gtk.Fixed()
         directory = os.path.dirname("TestMap.jpg")
         path = os.path.abspath(os.path.dirname(__file__))
         temp_image = gtk.gdk.pixbuf_new_from_file(os.path.join(path,"TestMap.jpg"))
@@ -69,12 +69,12 @@ class BaseWindow:
         scaled_image = temp_image.scale_simple(400, 300, gtk.gdk.INTERP_BILINEAR)
         image_test.set_from_pixbuf(scaled_image)
 
-        self.image_box.put(image_test, 0, 0)
+        self.map_box.put(image_test, 0, 0)
 
         rover_icon = gtk.Image()
         rover_icon.set_from_stock(gtk.STOCK_HOME,gtk.ICON_SIZE_BUTTON)
 
-        self.image_box.put(rover_icon, 50, 50)
+        self.map_box.put(rover_icon, 50, 50)
 
 
 
@@ -200,8 +200,8 @@ class BaseWindow:
         self.main_box.show()
 
         self.top_container = gtk.Table(3,6)
-        self.top_container.attach(self.image_box, 0, 1, 4, 5)
-        self.top_container.attach(self.video_box, 0, 3, 0, 4)
+        self.top_container.attach(self.map_box, 0, 1, 4, 5)
+        self.top_container.attach(self.display_box, 0, 3, 0, 4)
         self.top_container.attach(self.status_box, 1, 2, 4, 5)
         self.top_container.attach(self.entry_box, 2, 3, 4, 5)
         self.top_container.attach(self.widget_box, 0, 4, 5, 6)
@@ -267,9 +267,7 @@ class BaseWindow:
 
     def show_video(self, event):
         try:
-            self.t = VideoThread(self.img,self.vidip1,self.vidport1)
-            self.t2 = VideoThread(self.img2,self.vidip2,self.vidport2)
-            self.t2.start()
+            self.t = VideoThread(self.img,self.video_ip,self.video_port)
             self.t.start()
             self.message.set_text("Displaying video")
         except:
@@ -279,7 +277,6 @@ class BaseWindow:
     def quit_video(self, event):
         try:
             self.t.quit = True
-            self.t2.quit = True
             self.message.set_text("Stopped video display")
         except:
             self.message.set_text("Can't stop video display")
@@ -324,14 +321,10 @@ class BaseWindow:
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()), True)
             self.message.set_text("Trying to connect to server at %s:%s"%(self.ip_box.get_text(),self.port_box.get_text()))
-        elif "1" in self.option_box.get_text().lower():
-            self.vidip1 = self.ip_box.get_text()
-            self.vidport1 = self.port_box.get_text()
+        elif "video" in self.option_box.get_text().lower():
+            self.video_ip = self.ip_box.get_text()
+            self.video_port = self.port_box.get_text()
             self.message.set_text("Connecting to first video stream")
-        elif "2" in self.option_box.get_text().lower():
-            self.vidip2 = self.ip_box.get_text()
-            self.vidport2 = self.port_box.get_text()
-            self.message.set_text("Connecting to second video stream")
         else:
             self.message.set_text("Invalid option")
 
