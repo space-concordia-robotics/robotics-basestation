@@ -3,6 +3,7 @@ from roboticsnet.roboticsnet_exception import RoboticsnetException
 from roboticsnet.rover_client import RoverClient
 from roboticslogger.logger import Logger
 from multiprocessing import Process, Pipe
+import socket
 
 class ClientProcess():
     """
@@ -82,10 +83,6 @@ class ClientProcess():
             self.logger_conn.send(["err", "Client process dead."])
 
     def client_proc(self, client_host, client_tcp_port, client_udp_port, conn):
-        """
-        Client process logic loop
-        """
-
         # try init rover client
         try:
             self.logger_conn.send(["info", "Initializing client on {0}:{1}/{2}".format(client_host, client_tcp_port, client_udp_port)])
@@ -98,7 +95,7 @@ class ClientProcess():
         while not self.kill_flag:
             try:
                 msg = conn.recv()
-
+        
                 # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
                     print client.ping()
@@ -106,65 +103,34 @@ class ClientProcess():
                     print client.query()
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
                     print client.sensInfo()
-
+    
                 # Utility commands for the local client
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
                     client.setPort(msg[1], msg[2])
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
                     client.setHost(msg[1])
-
+    
                 # Commands to kill the client and/or the server
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
                     self.kill_flag = True
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
                     client.sendCommand(msg[0])
                     self.kill_flag = True
-
-                # Generic commands (timed & untimed)
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stop']):
-                    client.timedCommand(msg[0])
-                elif (ROBOTICSNET_STRCMD_LOOKUP['forward'] or ROBOTICSNET_STRCMD_LOOKUP['reverse'] or
-                    ROBOTICSNET_STRCMD_LOOKUP['forwardLeft'] or ROBOTICSNET_STRCMD_LOOKUP['forwardRight'] or
-                    ROBOTICSNET_STRCMD_LOOKUP['reverseLeft'] or ROBOTICSNET_STRCMD_LOOKUP['reverseRight']):
+    
+                # Driving commands (timed & untimed)
+                elif (msg[0] in range(0x07)):
                     client.timedCommand(msg[0], msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['startvid'] or ROBOTICSNET_STRCMD_LOOKUP['stopvid'] or
-                    ROBOTICSNET_STRCMD_LOOKUP['snapshot'] or ROBOTICSNET_STRCMD_LOOKUP['panoramicsnapshot']):
+                        
+                #Camera commands
+                elif (msg[0] in range (0x20,0x24)):
                     client.sendCommand(msg[0])
-
+    
                 else:
                     raise Exception('Message type {0} not matched to a client message. Check clientproc.py').format(msg[0])
-
                 self.logger_conn.send(["info", "Sent {0}".format(msg)])
-
             except Exception as e:
-                # put weak connection behaviour here! this means that the station connection is very weak
                 self.logger_conn.send(["err", "Exception in station client process:\n{0}\nWaiting for next command.".format(e.message)])
 
         self.logger_conn.send(["info", "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)])
         self.state_alive = False
 
-def main():
-    """
-    Test method that creates a clientproc and tries to send a value
-    """
-    host = raw_input("Enter host: ")
-    port =  int(raw_input("Enter port: "))
-
-    com = int(raw_input("Enter command: "))
-    val = int(raw_input("Enter value: "))
-
-    logger = Logger()
-    parent_conn, child_conn = Pipe()
-    p = Process(target=logger.run, args=(child_conn,))
-    p.start()
-
-
-    client_process = ClientProcess(host, port, port+1, parent_conn)
-    client_process.send_command(com, val)
-
-    client_process.kill_client_process()
-
-    parent_conn.send(["done"])
-
-if __name__ == "__main__":\
-    main()

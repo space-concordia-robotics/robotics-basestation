@@ -1,11 +1,10 @@
 import threading
-import sys, traceback
+import socket
+import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
-import urllib
 import gobject
-import threading
 import multiprocessing
 import os
 
@@ -151,21 +150,7 @@ class BaseWindow:
 
         self.widget_box.attach(self.btn_exit, 4, 5, 1, 2)
 
-
-
-        ###########################
-        # Status Box
-        ###########################
-
-        self.status_box = gtk.HBox(False, 0)
-        self.text1 = gtk.TextView()
-        self.text1.set_editable(False)
-
-        self.text1_buffer = self.text1.get_buffer()
-        self.text1_buffer.set_text("Testing!!!!!")
-
-        self.status_box.pack_start(self.text1)
-        
+    
         
         ###########################
         # Entry Box
@@ -200,9 +185,8 @@ class BaseWindow:
         self.main_box.show()
 
         self.top_container = gtk.Table(3,6)
-        self.top_container.attach(self.map_box, 0, 1, 4, 5)
+        self.top_container.attach(self.map_box, 0, 2, 4, 5)
         self.top_container.attach(self.display_box, 0, 3, 0, 4)
-        self.top_container.attach(self.status_box, 1, 2, 4, 5)
         self.top_container.attach(self.entry_box, 2, 3, 4, 5)
         self.top_container.attach(self.widget_box, 0, 4, 5, 6)
 
@@ -305,18 +289,19 @@ class BaseWindow:
         self.message.set_text("Taking a snapshot")
 
     def panoramic(self, event):
-        self.message.set_text("Taking a panoramic")
+        self.message.set_text("Taking a panoramic snapshot")
+        self.send_command(ROBOTICSNET_CAMERA_SNAPSHOT)
 
-    def sendcommand(self, command):
+    def send_command(self, command):
         try:
             self.client.send_command(command)
-            self.message.set_text("sent %d"%(command))
-        except:
+        except socket.timeout:
             self.message.set_text("could not send %d"%(command))
             self.logger_parent.send(["err", sys.exc_info()[0]])
+        else:
+            self.message.set_text("sent %d"%(command))
 
     def connect(self, event):
-
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()), True)
