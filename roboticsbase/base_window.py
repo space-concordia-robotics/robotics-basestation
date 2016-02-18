@@ -11,6 +11,7 @@ import os
 
 from roboticslogger.logger import Logger
 from roboticsnet.gateway_constants import *
+from roboticsbase.text_buffer import TextBuffer
 from common_constants import *
 from mjpg import VideoThread
 from roboticsnet.roboticsnet_exception import RoboticsnetException
@@ -27,10 +28,12 @@ class BaseWindow:
         self.p.start()
 
         self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
-        self.client = ClientProcess("localhost", 10666, 10667, self.logger_parent_conn)
+        self.cproc_send, self.cproc_recv = multiprocessing.Pipe()
+        self.client = ClientProcess("localhost", 10666, 10667,
+                self.logger_parent_conn, self.cproc_send)
         self.isconnected = False
 
-        #this isn't necessary for gobject v~3+. not sure what the version being used is.
+        # this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
 
         ############################
@@ -140,9 +143,9 @@ class BaseWindow:
         self.status_box = gtk.HBox(False, 0)
         self.text1 = gtk.TextView()
         self.text1.set_editable(False)
-
         self.text1_buffer = self.text1.get_buffer()
-        self.text1_buffer.set_text("Testing!!!!!")
+
+        self.text1_buffer.set_text("GUI started.")
 
         self.status_box.pack_start(self.text1)
 
@@ -221,7 +224,7 @@ class BaseWindow:
 
     def start_video(self, event):
         try:
-            self.send_command(ROBOTICSNET_COMMAND_START_VID)
+            self.client.send_command(ROBOTICSNET_COMMAND_START_VID)
             self.logger_parent_conn.send(["info", "starting video stream"])
         except:
             self.logger_parent_conn.send(["err", "cannot start video"])
@@ -230,7 +233,7 @@ class BaseWindow:
 
     def stop_video(self, event):
         try:
-            self.send_command(ROBOTICSNET_COMMAND_STOP_VID)
+            self.client.send_command(ROBOTICSNET_COMMAND_STOP_VID)
             self.logger_parent_conn.send(["info", "stopping video stream"])
         except:
             print "cannot stop video"
@@ -270,6 +273,10 @@ class BaseWindow:
             self.logger_parent_conn.send(["err", "cannot start joystick listener. It's almost definitely because there isn't one connected"])
 
     def print_text(self, text):
+        """
+        Prints text to be displayed on the GUI (whichever way you prefer that to happen)
+        """
+        self.text1_buffer.set_text(text)
         pass
 
     def snapshot(self, event):
@@ -280,19 +287,19 @@ class BaseWindow:
         self.logger_parent_conn.send(["info", "Taking a panoramic"])
         pass
 
-    def sendcommand(self, command):
+    def send_await_response(self, command):
         self.client.send_command(command)
+        self.print_text(self.cproc_recv.recv())
 
     def connect(self, event):
 
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()), True)
-            self.logger_parent_conn.send(["info", "Basestation trying to connect to server"])
+            self.logger_parent_conn.send(["info", "Basestation trying to ping server..."])
+            self.send_await_response(ROBOTICSNET_SYSTEM_PING)
         elif "1" in self.option_box.get_text().lower():
             self.logger_parent_conn.send(["info", "Basestation trying to connect to first video stream"])
-
-
         elif "2" in self.option_box.get_text().lower():
             self.logger_parent_conn.send(["info", "basestation connecting to video stream 2"])
             pass

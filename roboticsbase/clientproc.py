@@ -20,7 +20,7 @@ class ClientProcess():
     author: msnidal
     """
 
-    def __init__(self, host, tcp_port, udp_port, logger_conn):
+    def __init__(self, host, tcp_port, udp_port, logger_conn, message_conn):
         """
         Initializes a rover client process on host:port
         """
@@ -28,8 +28,9 @@ class ClientProcess():
         self.kill_flag = False
         self.state_alive = True
         self.logger_conn = logger_conn
-        self.parent_conn, child_conn = Pipe()
-        self.process = Process(target=self.client_proc, args=(host, tcp_port, udp_port, child_conn))
+        self.proc_send_conn, proc_recv_conn = Pipe()
+        self.process = Process(target=self.client_proc, 
+                args=(host, tcp_port, udp_port, proc_recv_conn, message_conn))
         self.process.start()
 
     def __del__(self):
@@ -44,7 +45,7 @@ class ClientProcess():
         Send a command to the client process
         """
         if (self.state_alive):
-            self.parent_conn.send([command, value])
+            self.proc_send_conn.send([command, value])
         else:
             self.logger_conn.send(["err", "Client process dead."])
 
@@ -54,7 +55,7 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['sethost'], host])
+            self.proc_send_conn.send([ROBOTICSNET_STRCMD_LOOKUP['sethost'], host])
         else:
             self.logger_conn.send(["err", "Client process dead."])
 
@@ -65,10 +66,9 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port, is_tcp])
+            self.proc_send_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port, is_tcp])
         else:
             self.logger_conn.send(["err", "Client process dead."])
-
 
     def kill_client_process(self):
         """
@@ -76,12 +76,12 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
+            self.proc_send_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
             self.process.join()
         else:
             self.logger_conn.send(["err", "Client process dead."])
 
-    def client_proc(self, client_host, client_tcp_port, client_udp_port, conn):
+    def client_proc(self, client_host, client_tcp_port, client_udp_port, recv_conn, send_conn):
         """
         Client process logic loop
         """
@@ -97,15 +97,15 @@ class ClientProcess():
         # main loop
         while not self.kill_flag:
             try:
-                msg = conn.recv()
+                msg = recv_conn.recv()
 
                 # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
-                    print client.ping()
+                    send_conn.send("Ping returned in {0}s".format(client.ping()))
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['queryproc']):
-                    print client.query()
+                    send_conn.send(client.query())
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
-                    print client.sensInfo()
+                    send_conn.send(client.sensInfo())
 
                 # Utility commands for the local client
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
@@ -155,12 +155,15 @@ def main():
 
     logger = Logger()
     parent_conn, child_conn = Pipe()
+    recv_conn, send_conn = Pipe()
     p = Process(target=logger.run, args=(child_conn,))
     p.start()
 
 
-    client_process = ClientProcess(host, port, port+1, parent_conn)
+    client_process = ClientProcess(host, port, port+1, parent_conn, send_conn)
     client_process.send_command(com, val)
+
+    print(recv_conn.recv())
 
     client_process.kill_client_process()
 
