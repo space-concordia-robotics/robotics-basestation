@@ -21,7 +21,7 @@ class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
         # Logger
-        self.logger = Logger()
+        self.logger = Logger("basestation")
         self.logger_parent_conn, self.logger_child_conn = multiprocessing.Pipe()
         self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, ))
         self.p.start()
