@@ -234,7 +234,7 @@ class BaseWindow:
 
     def start_video(self, event):
         try:
-            self.send_command(ROBOTICSNET_COMMAND_START_VID)
+            self.send_command(CAMERA_START_VID)
             self.message.set_text("starting video stream")
         except:
             self.message.set_text("cannot start video stream")
@@ -243,7 +243,7 @@ class BaseWindow:
 
     def stop_video(self, event):
         try:
-            self.send_command(ROBOTICSNET_COMMAND_STOP_VID)
+            self.send_command(CAMERA_STOP_VID)
             self.message.set_text("stopping video stream")
         except:
             self.message.set_text("cannot stop video")
@@ -286,16 +286,18 @@ class BaseWindow:
         self.text1_buffer.set_text(text)
 
     def snapshot(self, event):
+        self.send_command(CAMERA_SNAPSHOT)
         self.message.set_text("Taking a snapshot")
+        
 
     def panoramic(self, event):
         self.message.set_text("Taking a panoramic snapshot")
-        self.send_command(ROBOTICSNET_CAMERA_SNAPSHOT)
+        self.send_command(CAMERA_SNAPSHOT)
 
     def send_command(self, command):
         try:
             self.client.send_command(command)
-        except socket.timeout:
+        except:
             self.message.set_text("could not send %d"%(command))
             self.logger_parent.send(["err", sys.exc_info()[0]])
         else:

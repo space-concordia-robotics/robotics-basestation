@@ -55,7 +55,7 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['sethost'], host])
+            self.parent_conn.send([STRCMD_LOOKUP['sethost'], host])
         else:
             self.logger_conn.send(["err", "Client process dead."])
 
@@ -66,7 +66,7 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port, is_tcp])
+            self.parent_conn.send([STRCMD_LOOKUP['setport'], port, is_tcp])
         else:
             self.logger_conn.send(["err", "Client process dead."])
 
@@ -77,7 +77,7 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
+            self.parent_conn.send([STRCMD_LOOKUP['killclient']])
             self.process.join()
         else:
             self.logger_conn.send(["err", "Client process dead."])
@@ -97,23 +97,23 @@ class ClientProcess():
                 msg = conn.recv()
         
                 # Special commands which return values. TODO: should print value on GUI not console
-                if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
+                if (msg[0] == STRCMD_LOOKUP['ping']):
                     print client.ping()
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['queryproc']):
+                elif (msg[0] == STRCMD_LOOKUP['queryproc']):
                     print client.query()
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
+                elif (msg[0] == STRCMD_LOOKUP['sensorinfo']):
                     print client.sensInfo()
     
                 # Utility commands for the local client
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
+                elif (msg[0] == STRCMD_LOOKUP['setport']):
                     client.setPort(msg[1], msg[2])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
+                elif (msg[0] == STRCMD_LOOKUP['sethost']):
                     client.setHost(msg[1])
     
                 # Commands to kill the client and/or the server
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
+                elif (msg[0] == STRCMD_LOOKUP['killclient']):
                     self.kill_flag = True
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
+                elif (msg[0] == STRCMD_LOOKUP['graceful']):
                     client.sendCommand(msg[0])
                     self.kill_flag = True
     
