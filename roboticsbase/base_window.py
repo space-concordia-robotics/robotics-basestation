@@ -22,13 +22,13 @@ class BaseWindow:
         # Logger
         self.logger = Logger("basestation")
         self.logger_parent, self.logger_child = multiprocessing.Pipe()
-        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, ))
+        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child, ))
         self.p.start()
 
         self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
         self.cproc_send, self.cproc_recv = multiprocessing.Pipe()
         self.client = ClientProcess("localhost", 10666, 10667,
-                self.logger_parent_conn, self.cproc_send)
+                self.logger_parent, self.cproc_send)
         self.isconnected = False
 
         # this isn't necessary for gobject v~3+. not sure what the version being used is.
@@ -247,7 +247,7 @@ class BaseWindow:
     def stop_video(self, event):
         try:
             self.send_command(CAMERA_STOP_VID)
-            self.logger_parent_conn.send(["info", "stopping video stream"])
+            self.logger_parent.send(["info", "stopping video stream"])
             self.message.set_text("stopping video stream")
         except:
             self.message.set_text("cannot stop video")
@@ -314,12 +314,10 @@ class BaseWindow:
 
     def connect(self, event):
         if "server" in self.option_box.get_text().lower():
-            self.client.set_host(self.ip_box.get_text())
-            self.client.set_port(int(self.port_box.get_text()), True)
             self.message.set_text("Trying to connect to server at %s:%s"%(self.ip_box.get_text(),self.port_box.get_text()))
 
-            self.logger_parent_conn.send(["info", "Basestation trying to ping server..."])
-            self.message.set_text(self.send_await_response(ROBOTICSNET_SYSTEM_PING))
+            self.logger_parent.send(["info", "Basestation trying to ping server..."])
+            self.message.set_text(self.send_await_response(SYSTEM_PING))
 
         elif "video" in self.option_box.get_text().lower():
             self.video_ip = self.ip_box.get_text()

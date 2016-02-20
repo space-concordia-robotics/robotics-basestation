@@ -56,7 +56,7 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.proc_send_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
+            self.proc_send_conn.send([CLIENT_KILL])
             self.process.join()
         else:
             self.logger_conn.send(["err", "Client process dead."])
@@ -80,23 +80,17 @@ class ClientProcess():
                 msg = recv_conn.recv()
 
                 # Special commands which return values. TODO: should print value on GUI not console
-                if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
+                if (msg[0] == SYSTEM_PING):
                     send_conn.send("Ping returned in {0}s".format(client.ping()))
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['queryproc']):
+                elif (msg[0] == SYSTEM_QUERYPROC):
                     send_conn.send(client.query())
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
+                elif (msg[0] == SENSOR_INFO):
                     send_conn.send(client.sensInfo())
 
-                # Utility commands for the local client
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
-                    client.setPort(msg[1], msg[2])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
-                    client.setHost(msg[1], msg[2])
-
                 # Commands to kill the client and/or the server
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
+                elif (msg[0] == CLIENT_KILL):
                     self.kill_flag = True
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
+                elif (msg[0] == SYSTEM_GRACEFUL):
                     client.sendCommand(msg[0])
                     self.kill_flag = True
 
@@ -109,7 +103,7 @@ class ClientProcess():
                     client.sendCommand(msg[0])
 
                 else:
-                    raise Exception('Message type {0} not matched to a client message. Check clientproc.py').format(msg[0])
+                    raise Exception("Message type {0} not matched to a client message. Check clientproc.py".format(msg[0]))
                 self.logger_conn.send(["info", "Sent {0}".format(msg)])
             except Exception as e:
                 self.logger_conn.send(["err", "Exception in station client process:\n{0}\nWaiting for next command.".format(e.message)])
@@ -127,7 +121,7 @@ def main():
     com = int(raw_input("Enter command: "))
     val = int(raw_input("Enter value: "))
 
-    logger = Logger()
+    logger = Logger("clientproc")
     parent_conn, child_conn = Pipe()
     recv_conn, send_conn = Pipe()
     p = Process(target=logger.run, args=(child_conn,))
@@ -137,7 +131,8 @@ def main():
     client_process = ClientProcess(host, port, port+1, parent_conn, send_conn)
     client_process.send_command(com, val)
 
-    print(recv_conn.recv())
+    if (com == 241):
+        print(recv_conn.recv())
 
     client_process.kill_client_process()
 
