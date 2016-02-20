@@ -40,7 +40,7 @@ class ClientProcess():
 
         kill_client_process()
 
-    def send_command(self, command, value = None):
+    def send_command(self, command, value = 0):
         """
         Send a command to the client process
         """
@@ -111,7 +111,7 @@ class ClientProcess():
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
                     client.setPort(msg[1], msg[2])
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
-                    client.setHost(msg[1])
+                    client.setHost(msg[1], msg[2])
 
                 # Commands to kill the client and/or the server
                 elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):

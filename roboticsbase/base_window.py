@@ -224,7 +224,7 @@ class BaseWindow:
 
     def start_video(self, event):
         try:
-            self.client.send_command(ROBOTICSNET_COMMAND_START_VID)
+            self.client.send_command(ROBOTICSNET_CAMERA_START_VID)
             self.logger_parent_conn.send(["info", "starting video stream"])
         except:
             self.logger_parent_conn.send(["err", "cannot start video"])
@@ -233,7 +233,7 @@ class BaseWindow:
 
     def stop_video(self, event):
         try:
-            self.client.send_command(ROBOTICSNET_COMMAND_STOP_VID)
+            self.client.send_command(ROBOTICSNET_CAMERA_STOP_VID)
             self.logger_parent_conn.send(["info", "stopping video stream"])
         except:
             print "cannot stop video"
@@ -289,15 +289,16 @@ class BaseWindow:
 
     def send_await_response(self, command):
         self.client.send_command(command)
-        self.print_text(self.cproc_recv.recv())
+        return self.cproc_recv.recv()
 
     def connect(self, event):
 
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()), True)
+
             self.logger_parent_conn.send(["info", "Basestation trying to ping server..."])
-            self.send_await_response(ROBOTICSNET_SYSTEM_PING)
+            self.print_text(self.send_await_response(ROBOTICSNET_SYSTEM_PING))
         elif "1" in self.option_box.get_text().lower():
             self.logger_parent_conn.send(["info", "Basestation trying to connect to first video stream"])
         elif "2" in self.option_box.get_text().lower():
