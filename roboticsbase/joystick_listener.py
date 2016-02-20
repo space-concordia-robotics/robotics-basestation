@@ -7,7 +7,7 @@ from input_exception import InputException
 from pygame.locals import *
 from common_constants import *
 from roboticsnet.gateway_constants import *
-from clientproc import ClientProcess
+from client_process import ClientProcess
 
 from profiles.logitech_F310 import *
 
@@ -51,10 +51,10 @@ def joystick_listener(client_process, events, joystick):
                     events[ROBOTICSBASE_STOP_LISTENER].set()
                 elif event.button == BUTTON_B:
                     if events[ROBOTICSBASE_STREAM_VIDEO].is_set():
-                        client_process.send_command(STRCMD_LOOKUP['startvid'])
+                        client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['startvid'])
                         events[ROBOTICSBASE_STREAM_VIDEO].clear()
                     else:
-                        client_process.send_command(STRCMD_LOOKUP['stopvid'])
+                        client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['stopvid'])
                         events[ROBOTICSBASE_STREAM_VIDEO].set()
                 # elif...
 
@@ -67,39 +67,39 @@ def joystick_listener(client_process, events, joystick):
 
         if x < (-20) and y >= 0:
             print "forward left %d" % x
-            client_process.send_command(STRCMD_LOOKUP['forwardLeft'], -x/2)
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['forwardLeft'], -x/2)
 
         elif x > (20) and y >= 0:
             print "forward right %d" % x
-            client_process.send_command(STRCMD_LOOKUP['forwardRight'], x/2)
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['forwardRight'], x/2)
 
 
         elif x < (-20) and y < 0:
             print "reversing left %x" % x
-            client_process.send_command(STRCMD_LOOKUP['reverseLeft'], -x/2)
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['reverseLeft'], -x/2)
 
 
         elif x > 20 and y < 0:
             print "reversing right %d" % x
-            client_process.send_command(STRCMD_LOOKUP['reverseRight'], x/2)
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['reverseRight'], x/2)
 
 
         elif y > (10):
             print "forward %d" % y
-            client_process.send_command(STRCMD_LOOKUP['forward'], y)
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['forward'], y)
 
         elif y < (-10):
             print "reverse %d" % y
-            client_process.send_command(STRCMD_LOOKUP['reverse'], -y)
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['reverse'], -y)
 
         else:
             print "stop"
-            client_process.send_command(STRCMD_LOOKUP['stop'])
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['stop'])
         # Save joystick value
         last = (x,y)
 
     # send one final stop command. Reset controller stop event
-    client_process.send_command(STRCMD_LOOKUP['stop'])
+    client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['stop'])
 
     pygame.quit()
     print "Joystick thread killed."

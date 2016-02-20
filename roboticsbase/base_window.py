@@ -13,29 +13,31 @@ from roboticsnet.gateway_constants import *
 from common_constants import *
 from mjpg import VideoThread
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from clientproc import ClientProcess
+from client_process import ClientProcess
 from joystick_listener import spawn_joystick_process
 
 class BaseWindow:
     # Create the base window where all other items will be.
     def __init__(self):
         # Logger
-        self.logger = Logger()
+        self.logger = Logger("basestation")
         self.logger_parent, self.logger_child = multiprocessing.Pipe()
-        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child, ))
+        self.p = multiprocessing.Process(target=self.logger.run, args = (self.logger_child_conn, ))
         self.p.start()
 
         self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
-        self.client = ClientProcess("localhost", 10666, 10667, self.logger_parent)
+        self.cproc_send, self.cproc_recv = multiprocessing.Pipe()
+        self.client = ClientProcess("localhost", 10666, 10667,
+                self.logger_parent_conn, self.cproc_send)
         self.isconnected = False
 
-        #this isn't necessary for gobject v~3+. not sure what the version being used is.
+        # this isn't necessary for gobject v~3+. not sure what the version being used is.
         gobject.threads_init()
 
         ############################
         # Video/Image Box
         ############################
-        
+
         self.video_ip = "localhost"
         self.video_port = 5000
 
@@ -116,7 +118,7 @@ class BaseWindow:
 
 
         #Displays
-        
+
         self.message = gtk.Label()
         self.message.set_text("No messages")
         #sensors
@@ -126,8 +128,8 @@ class BaseWindow:
         self.speed.set_text("0m/s")
         self.voltage = gtk.Label()
         self.voltage.set_text("0V")
-        
-        
+
+
         #entry boxes
         self.ip_box = gtk.Entry(max=15)
         self.port_box = gtk.Entry(max=5)
@@ -150,8 +152,8 @@ class BaseWindow:
 
         self.widget_box.attach(self.btn_exit, 4, 5, 1, 2)
 
-    
-        
+
+
         ###########################
         # Entry Box
         ###########################
@@ -235,6 +237,7 @@ class BaseWindow:
     def start_video(self, event):
         try:
             self.send_command(CAMERA_START_VID)
+            self.logger_parent.send(["info", "starting video stream"])
             self.message.set_text("starting video stream")
         except:
             self.message.set_text("cannot start video stream")
@@ -244,6 +247,7 @@ class BaseWindow:
     def stop_video(self, event):
         try:
             self.send_command(CAMERA_STOP_VID)
+            self.logger_parent_conn.send(["info", "stopping video stream"])
             self.message.set_text("stopping video stream")
         except:
             self.message.set_text("cannot stop video")
@@ -281,14 +285,10 @@ class BaseWindow:
             self.message.set_text("Cannot start joystick listener. Is it connected?")
             self.logger_parent.send(["err", sys.exc_info()[0]])
 
-    def print_text(self, text):
-        #right now this replaces the text in the textbox, but it should append.
-        self.text1_buffer.set_text(text)
-
     def snapshot(self, event):
         self.send_command(CAMERA_SNAPSHOT)
         self.message.set_text("Taking a snapshot")
-        
+
 
     def panoramic(self, event):
         self.message.set_text("Taking a panoramic snapshot")
@@ -300,14 +300,27 @@ class BaseWindow:
         except:
             self.message.set_text("could not send %d"%(command))
             self.logger_parent.send(["err", sys.exc_info()[0]])
+            raise
         else:
             self.message.set_text("sent %d"%(command))
+
+    def send_await_response(self, command):
+        try:
+            self.send_command(command)
+            return self.cproc_recv.recv()
+        except Exception as e:
+            self.logger_parent.send(["err", "Command did not send, so can't receive a value"])
+            return None
 
     def connect(self, event):
         if "server" in self.option_box.get_text().lower():
             self.client.set_host(self.ip_box.get_text())
             self.client.set_port(int(self.port_box.get_text()), True)
             self.message.set_text("Trying to connect to server at %s:%s"%(self.ip_box.get_text(),self.port_box.get_text()))
+
+            self.logger_parent_conn.send(["info", "Basestation trying to ping server..."])
+            self.message.set_text(self.send_await_response(ROBOTICSNET_SYSTEM_PING))
+
         elif "video" in self.option_box.get_text().lower():
             self.video_ip = self.ip_box.get_text()
             self.video_port = self.port_box.get_text()
