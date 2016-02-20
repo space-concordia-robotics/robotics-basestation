@@ -7,7 +7,7 @@ from input_exception import InputException
 from pygame.locals import *
 from common_constants import *
 from roboticsnet.gateway_constants import *
-from clientproc import ClientProcess
+from client_process import ClientProcess
 
 from profiles.logitech_F310 import *
 

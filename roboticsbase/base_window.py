@@ -15,7 +15,7 @@ from roboticsbase.text_buffer import TextBuffer
 from common_constants import *
 from mjpg import VideoThread
 from roboticsnet.roboticsnet_exception import RoboticsnetException
-from clientproc import ClientProcess
+from client_process import ClientProcess
 from joystick_listener import spawn_joystick_process
 
 class BaseWindow:
