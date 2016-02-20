@@ -11,7 +11,6 @@ import os
 
 from roboticslogger.logger import Logger
 from roboticsnet.gateway_constants import *
-from roboticsbase.text_buffer import TextBuffer
 from common_constants import *
 from mjpg import VideoThread
 from roboticsnet.roboticsnet_exception import RoboticsnetException
