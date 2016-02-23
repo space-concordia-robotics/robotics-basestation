@@ -289,10 +289,9 @@ class BaseWindow:
         self.send_command(CAMERA_SNAPSHOT)
         self.message.set_text("Taking a snapshot")
 
-
     def panoramic(self, event):
+        self.send_command(CAMERA_PANORAMIC)
         self.message.set_text("Taking a panoramic snapshot")
-        self.send_command(CAMERA_SNAPSHOT)
 
     def send_command(self, command):
         try:
