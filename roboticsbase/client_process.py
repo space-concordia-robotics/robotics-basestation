@@ -4,6 +4,7 @@ from roboticsnet.rover_client import RoverClient
 from roboticslogger.logger import Logger
 from multiprocessing import Process, Pipe
 import socket
+import sys
 
 class ClientProcess():
     """
@@ -81,11 +82,17 @@ class ClientProcess():
 
                 # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == SYSTEM_PING):
-                    send_conn.send("Ping returned in {0}s".format(client.ping()))
+                    time = client.ping()
+                    if time==None:
+                        send_conn.send("No connection")
+                    else:
+                        send_conn.send("Ping returned in {0}s".format(time))
                 elif (msg[0] == SYSTEM_QUERYPROC):
                     send_conn.send(client.query())
                 elif (msg[0] == SENSOR_INFO):
                     send_conn.send(client.sensInfo())
+                elif (msg[0] == CAMERA_SNAPSHOT or msg[0] == CAMERA_PANORAMIC):
+                    send_conn.send(client.snapshot(msg[0]))
 
                 # Commands to kill the client and/or the server
                 elif (msg[0] == CLIENT_KILL):
@@ -99,14 +106,14 @@ class ClientProcess():
                     client.timedCommand(msg[0], msg[1])
 
                 #Camera commands
-                elif (msg[0] in range (0x20,0x24)):
+                elif (msg[0] == CAMERA_START_VID or msg[0] == CAMERA_STOP_VID):
                     client.sendCommand(msg[0])
 
                 else:
                     raise Exception("Message type {0} not matched to a client message. Check clientproc.py".format(msg[0]))
                 self.logger_conn.send(["info", "Sent {0}".format(msg)])
-            except Exception as e:
-                self.logger_conn.send(["err", "Exception in station client process:\n{0}\nWaiting for next command.".format(e.message)])
+            except:
+                self.logger_conn.send(["err", "Exception in station client process. Waiting for next command."])
 
         self.logger_conn.send(["info", "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)])
         self.state_alive = False

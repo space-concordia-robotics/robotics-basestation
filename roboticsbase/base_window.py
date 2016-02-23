@@ -7,6 +7,9 @@ import gtk
 import gobject
 import multiprocessing
 import os
+import pygame
+import sys
+from PIL import Image
 
 from roboticslogger.logger import Logger
 from roboticsnet.gateway_constants import *
@@ -286,9 +289,17 @@ class BaseWindow:
             self.logger_parent.send(["err", sys.exc_info()[0]])
 
     def snapshot(self, event):
-        self.send_command(CAMERA_SNAPSHOT)
-        self.message.set_text("Taking a snapshot")
-
+        picfile = open('torecv.png','wb')
+        self.message.set_text("Could not take snapshot")
+        image = self.send_await_response(CAMERA_SNAPSHOT)
+        picfile.write(image)
+        image = pygame.image.fromstring(image,(640,480),"RGB")
+        pygame.image.save(image, "img.jpg")
+        
+        self.image_box.set_from_file("img.jpg")
+        
+        #self.image_box.set_from_image(img)
+        self.message.set_text("Taken snapshot")
 
     def panoramic(self, event):
         self.message.set_text("Taking a panoramic snapshot")
@@ -308,8 +319,9 @@ class BaseWindow:
         try:
             self.send_command(command)
             return self.cproc_recv.recv()
-        except Exception as e:
+        except:
             self.logger_parent.send(["err", "Command did not send, so can't receive a value"])
+            print "send_await_response exception"
             return None
 
     def connect(self, event):
