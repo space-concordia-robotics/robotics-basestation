@@ -7,7 +7,7 @@ from input_exception import InputException
 from pygame.locals import *
 from common_constants import *
 from roboticsnet.gateway_constants import *
-from clientproc import ClientProcess
+from client_process import ClientProcess
 
 from profiles.logitech_F310 import *
 
@@ -42,7 +42,7 @@ def joystick_listener(client_process, events, joystick):
     last = (0, 0)
     while events[ROBOTICSBASE_STOP_LISTENER].is_set() == False:
         # Sleep before starting next cycle
-        time.sleep(CONTROLLER_SLEEP_INTERVAL)
+        time.sleep(0.25)
 
         # Button logic
         for event in pygame.event.get():

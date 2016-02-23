@@ -3,6 +3,7 @@ from roboticsnet.roboticsnet_exception import RoboticsnetException
 from roboticsnet.rover_client import RoverClient
 from roboticslogger.logger import Logger
 from multiprocessing import Process, Pipe
+import socket
 
 class ClientProcess():
     """
@@ -20,7 +21,7 @@ class ClientProcess():
     author: msnidal
     """
 
-    def __init__(self, host, tcp_port, udp_port, logger_conn):
+    def __init__(self, host, tcp_port, udp_port, logger_conn, message_conn):
         """
         Initializes a rover client process on host:port
         """
@@ -28,8 +29,9 @@ class ClientProcess():
         self.kill_flag = False
         self.state_alive = True
         self.logger_conn = logger_conn
-        self.parent_conn, child_conn = Pipe()
-        self.process = Process(target=self.client_proc, args=(host, tcp_port, udp_port, child_conn))
+        self.proc_send_conn, proc_recv_conn = Pipe()
+        self.process = Process(target=self.client_proc,
+                args=(host, tcp_port, udp_port, proc_recv_conn, message_conn))
         self.process.start()
 
     def __del__(self):
@@ -39,36 +41,14 @@ class ClientProcess():
 
         kill_client_process()
 
-    def send_command(self, command, value = None):
+    def send_command(self, command, value = 0):
         """
         Send a command to the client process
         """
         if (self.state_alive):
-            self.parent_conn.send([command, value])
+            self.proc_send_conn.send([command, value])
         else:
             self.logger_conn.send(["err", "Client process dead."])
-
-    def set_host(self, host):
-        """
-        Change the destination host
-        """
-
-        if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['sethost'], host])
-        else:
-            self.logger_conn.send(["err", "Client process dead."])
-
-
-    def set_port(self, port, is_tcp = True):
-        """
-        Change the destination port
-        """
-
-        if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['setport'], port, is_tcp])
-        else:
-            self.logger_conn.send(["err", "Client process dead."])
-
 
     def kill_client_process(self):
         """
@@ -76,12 +56,12 @@ class ClientProcess():
         """
 
         if (self.state_alive):
-            self.parent_conn.send([ROBOTICSNET_STRCMD_LOOKUP['killclient']])
+            self.proc_send_conn.send([CLIENT_KILL])
             self.process.join()
         else:
             self.logger_conn.send(["err", "Client process dead."])
 
-    def client_proc(self, client_host, client_tcp_port, client_udp_port, conn):
+    def client_proc(self, client_host, client_tcp_port, client_udp_port, recv_conn, send_conn):
         """
         Client process logic loop
         """
@@ -97,47 +77,35 @@ class ClientProcess():
         # main loop
         while not self.kill_flag:
             try:
-                msg = conn.recv()
+                msg = recv_conn.recv()
 
                 # Special commands which return values. TODO: should print value on GUI not console
-                if (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['ping']):
-                    print client.ping()
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['queryproc']):
-                    print client.query()
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sensorinfo']):
-                    print client.sensInfo()
-
-                # Utility commands for the local client
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['setport']):
-                    client.setPort(msg[1], msg[2])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['sethost']):
-                    client.setHost(msg[1])
+                if (msg[0] == SYSTEM_PING):
+                    send_conn.send("Ping returned in {0}s".format(client.ping()))
+                elif (msg[0] == SYSTEM_QUERYPROC):
+                    send_conn.send(client.query())
+                elif (msg[0] == SENSOR_INFO):
+                    send_conn.send(client.sensInfo())
 
                 # Commands to kill the client and/or the server
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['killclient']):
+                elif (msg[0] == CLIENT_KILL):
                     self.kill_flag = True
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['graceful']):
+                elif (msg[0] == SYSTEM_GRACEFUL):
                     client.sendCommand(msg[0])
                     self.kill_flag = True
 
-                # Generic commands (timed & untimed)
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['stop']):
-                    client.timedCommand(msg[0])
-                elif (ROBOTICSNET_STRCMD_LOOKUP['forward'] or ROBOTICSNET_STRCMD_LOOKUP['reverse'] or
-                    ROBOTICSNET_STRCMD_LOOKUP['forwardLeft'] or ROBOTICSNET_STRCMD_LOOKUP['forwardRight'] or
-                    ROBOTICSNET_STRCMD_LOOKUP['reverseLeft'] or ROBOTICSNET_STRCMD_LOOKUP['reverseRight']):
+                # Driving commands (timed & untimed)
+                elif (msg[0] in range(0x07)):
                     client.timedCommand(msg[0], msg[1])
-                elif (msg[0] == ROBOTICSNET_STRCMD_LOOKUP['startvid'] or ROBOTICSNET_STRCMD_LOOKUP['stopvid'] or
-                    ROBOTICSNET_STRCMD_LOOKUP['snapshot'] or ROBOTICSNET_STRCMD_LOOKUP['panoramicsnapshot']):
+
+                #Camera commands
+                elif (msg[0] in range (0x20,0x24)):
                     client.sendCommand(msg[0])
 
                 else:
-                    raise Exception('Message type {0} not matched to a client message. Check clientproc.py').format(msg[0])
-
+                    raise Exception("Message type {0} not matched to a client message. Check clientproc.py".format(msg[0]))
                 self.logger_conn.send(["info", "Sent {0}".format(msg)])
-
             except Exception as e:
-                # put weak connection behaviour here! this means that the station connection is very weak
                 self.logger_conn.send(["err", "Exception in station client process:\n{0}\nWaiting for next command.".format(e.message)])
 
         self.logger_conn.send(["info", "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)])
@@ -153,14 +121,18 @@ def main():
     com = int(raw_input("Enter command: "))
     val = int(raw_input("Enter value: "))
 
-    logger = Logger()
+    logger = Logger("clientproc")
     parent_conn, child_conn = Pipe()
+    recv_conn, send_conn = Pipe()
     p = Process(target=logger.run, args=(child_conn,))
     p.start()
 
 
-    client_process = ClientProcess(host, port, port+1, parent_conn)
+    client_process = ClientProcess(host, port, port+1, parent_conn, send_conn)
     client_process.send_command(com, val)
+
+    if (com == 241):
+        print(recv_conn.recv())
 
     client_process.kill_client_process()
 
