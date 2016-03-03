@@ -32,7 +32,7 @@ class ClientProcess():
         self.logger_conn = logger_conn
         self.proc_send_conn, proc_recv_conn = Pipe()
         self.process = Process(target=self.client_proc,
-                args=(host, tcp_port, udp_port, proc_recv_conn, message_conn))
+                args=(proc_recv_conn, message_conn))
         self.process.start()
 
     def __del__(self):
@@ -70,7 +70,7 @@ class ClientProcess():
         # try init rover client
         try:
             self.logger_conn.send(["info", "Initializing client on {0}:{1}/{2}".format(client_host, client_tcp_port, client_udp_port)])
-            client = RoverClient(host = client_host, tcp_port = client_tcp_port, udp_port = client_udp_port)
+            client = RoverClient()
         except Exception as e:
             self.logger_conn.send(["err", "Error initializing rover client! {0}".format(e.message)])
             self.kill_flag = True
@@ -82,17 +82,21 @@ class ClientProcess():
 
                 # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == SYSTEM_PING):
-                    time = client.ping()
-                    if time==None:
-                        send_conn.send("No connection")
-                    else:
-                        send_conn.send("Ping returned in {0}s".format(time))
+                    #time = client.ping()
+                    pass
+                    #if time==None:
+                    #    send_conn.send("No connection")
+                    #else:
+                    #    send_conn.send("Ping returned in {0}s".format(time))
                 elif (msg[0] == SYSTEM_QUERYPROC):
-                    send_conn.send(client.query())
+                    pass
+                    #send_conn.send(client.query())
                 elif (msg[0] == SENSOR_INFO):
-                    send_conn.send(client.sensInfo())
+                    pass
+                    #send_conn.send(client.sensInfo())
                 elif (msg[0] == CAMERA_SNAPSHOT or msg[0] == CAMERA_PANORAMIC):
-                    send_conn.send(client.snapshot(msg[0]))
+                    pass
+                    #send_conn.send(client.snapshot(msg[0]))
 
                 # Commands to kill the client and/or the server
                 elif (msg[0] == CLIENT_KILL):
@@ -118,32 +122,3 @@ class ClientProcess():
         self.logger_conn.send(["info", "Client process on {0}:{1}/{2} terminated.".format(client_host, client_tcp_port, client_udp_port)])
         self.state_alive = False
 
-def main():
-    """
-    Test method that creates a clientproc and tries to send a value
-    """
-    host = raw_input("Enter host: ")
-    port =  int(raw_input("Enter port: "))
-
-    com = int(raw_input("Enter command: "))
-    val = int(raw_input("Enter value: "))
-
-    logger = Logger("clientproc")
-    parent_conn, child_conn = Pipe()
-    recv_conn, send_conn = Pipe()
-    p = Process(target=logger.run, args=(child_conn,))
-    p.start()
-
-
-    client_process = ClientProcess(host, port, port+1, parent_conn, send_conn)
-    client_process.send_command(com, val)
-
-    if (com == 241):
-        print(recv_conn.recv())
-
-    client_process.kill_client_process()
-
-    parent_conn.send(["done"])
-
-if __name__ == "__main__":\
-    main()
