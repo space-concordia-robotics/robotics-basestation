@@ -82,18 +82,15 @@ class ClientProcess():
 
                 # Special commands which return values. TODO: should print value on GUI not console
                 if (msg[0] == SYSTEM_PING):
-                    #time = client.ping()
-                    pass
-                    #if time==None:
-                    #    send_conn.send("No connection")
-                    #else:
-                    #    send_conn.send("Ping returned in {0}s".format(time))
+                    time = client.ping()
+                    if time==None:
+                        send_conn.send("No connection")
+                    else:
+                        send_conn.send("Ping returned in {0}s".format(time))
                 elif (msg[0] == SYSTEM_QUERYPROC):
-                    pass
-                    #send_conn.send(client.query())
+                    send_conn.send(client.query())
                 elif (msg[0] == SENSOR_INFO):
-                    pass
-                    #send_conn.send(client.sensInfo())
+                    send_conn.send(client.sensInfo())
                 elif (msg[0] == CAMERA_SNAPSHOT or msg[0] == CAMERA_PANORAMIC):
                     pass
                     #send_conn.send(client.snapshot(msg[0]))

@@ -289,14 +289,14 @@ class BaseWindow:
             self.logger_parent.send(["err", sys.exc_info()[0]])
 
     def snapshot(self, event):
-        picfile = open('torecv.png','wb')
-        self.message.set_text("Could not take snapshot")
-        image = self.send_await_response(CAMERA_SNAPSHOT)
-        picfile.write(image)
-        image = pygame.image.fromstring(image,(640,480),"RGB")
-        pygame.image.save(image, "img.jpg")
-        
-        self.image_box.set_from_file("img.jpg")
+        #picfile = open('torecv.png','wb')
+        #self.message.set_text("Could not take snapshot")
+        #image = self.send_await_response(CAMERA_SNAPSHOT)
+        #picfile.write(image)
+        #image = pygame.image.fromstring(image,(640,480),"RGB")
+        #pygame.image.save(image, "img.jpg")
+       # 
+       # self.image_box.set_from_file("img.jpg")
         
         #self.image_box.set_from_image(img)
         self.message.set_text("Taken snapshot")
