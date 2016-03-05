@@ -67,24 +67,13 @@ def joystick_listener(client_process, events, joystick):
         if (x,y) == last:
             continue
 
-        if x < (-20) and y >= 0:
-            print "forward left %d" % x
-            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['forwardLeft'], -x/2)
+        if x < (-40):
+            print "turning left left %d" % x
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['left'], -x/2)
 
-        elif x > (20) and y >= 0:
-            print "forward right %d" % x
-            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['forwardRight'], x/2)
-
-
-        elif x < (-20) and y < 0:
-            print "reversing left %x" % x
-            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['reverseLeft'], -x/2)
-
-
-        elif x > 20 and y < 0:
-            print "reversing right %d" % x
-            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['reverseRight'], x/2)
-
+        elif x > (40):
+            print "turning left right %d" % x
+            client_process.send_command(ROBOTICSNET_STRCMD_LOOKUP['right'], x/2)
 
         elif y > (10):
             print "forward %d" % y

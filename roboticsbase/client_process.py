@@ -104,7 +104,7 @@ class ClientProcess():
                     self.kill_flag = True
 
                 # Driving commands (timed & untimed)
-                elif (msg[0] in range(0x07)):
+                elif (msg[0] in range(0x05)):
                     client.timedCommand(msg[0], msg[1])
                     print "Driving with {0}:{1}".format(msg[0], msg[1])
 
