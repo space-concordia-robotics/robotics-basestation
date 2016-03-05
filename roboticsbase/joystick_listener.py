@@ -7,6 +7,8 @@ from input_exception import InputException
 from pygame.locals import *
 from common_constants import *
 from roboticsnet.gateway_constants import *
+from roboticslogger.logger import Logger
+from multiprocessing import Process, Pipe
 from client_process import ClientProcess
 
 from profiles.logitech_F310 import *
@@ -133,9 +135,17 @@ def main():
     """
     host = raw_input("Enter host: ")
     port = int(raw_input("Enter port: "))
+
+    logger = Logger("joystick")
+    parent_conn, child_conn = Pipe()
+    recv_conn, send_conn = Pipe()
+
+    p = Process(target = logger.run, args=(child_conn,))
+    p.start()
+
     events = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
-    lock = multiprocessing.Lock()
-    client_process = ClientProcess(host, port, port+1)
+    client_process = ClientProcess(host, port, port+1, parent_conn, send_conn)
+    print "Booting client process..."
 
     try:
         spawn_joystick_process(client_process, events)

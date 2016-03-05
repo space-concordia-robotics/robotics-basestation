@@ -69,7 +69,7 @@ class ClientProcess():
         # try init rover client
         try:
             self.logger_conn.send(["info", "Initializing client on {0}:{1}/{2}".format(client_host, client_tcp_port, client_udp_port)])
-            client = RoverClient(host = client_host, tcp_port = client_tcp_port, udp_port = client_udp_port)
+            client = RoverClient()
         except Exception as e:
             self.logger_conn.send(["err", "Error initializing rover client! {0}".format(e.message)])
             self.kill_flag = True
@@ -97,6 +97,7 @@ class ClientProcess():
                 # Driving commands (timed & untimed)
                 elif (msg[0] in range(0x07)):
                     client.timedCommand(msg[0], msg[1])
+                    print "Driving with {0}:{1}".format(msg[0], msg[1])
 
                 #Camera commands
                 elif (msg[0] in range (0x20,0x24)):
