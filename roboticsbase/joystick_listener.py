@@ -133,9 +133,6 @@ def main():
     """
     Test method that creates a standalone controller event thread
     """
-    host = raw_input("Enter host: ")
-    port = int(raw_input("Enter port: "))
-
     logger = Logger("joystick")
     parent_conn, child_conn = Pipe()
     recv_conn, send_conn = Pipe()
@@ -144,7 +141,7 @@ def main():
     p.start()
 
     events = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
-    client_process = ClientProcess(host, port, port+1, parent_conn, send_conn)
+    client_process = ClientProcess(parent_conn, send_conn)
     print "Booting client process..."
 
     try:
