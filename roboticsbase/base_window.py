@@ -7,6 +7,9 @@ import gtk
 import gobject
 import multiprocessing
 import os
+import pygame
+import sys
+from PIL import Image
 
 from roboticslogger.logger import Logger
 from roboticsnet.gateway_constants import *
@@ -27,8 +30,7 @@ class BaseWindow:
 
         self.e = [multiprocessing.Event() for i in range(ROBOTICSBASE_NUM_EVENTS)]
         self.cproc_send, self.cproc_recv = multiprocessing.Pipe()
-        self.client = ClientProcess("localhost", 10666, 10667,
-                self.logger_parent, self.cproc_send)
+        self.client = ClientProcess(self.logger_parent, self.cproc_send)
         self.isconnected = False
 
         # this isn't necessary for gobject v~3+. not sure what the version being used is.
@@ -307,8 +309,9 @@ class BaseWindow:
         try:
             self.send_command(command)
             return self.cproc_recv.recv()
-        except Exception as e:
+        except:
             self.logger_parent.send(["err", "Command did not send, so can't receive a value"])
+            print "send_await_response exception"
             return None
 
     def connect(self, event):
